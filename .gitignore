@@ -1,6 +1,6 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-haruProject/.idea
+.idea/
 .vscode/
 *.py[cod]
 *$py.class
