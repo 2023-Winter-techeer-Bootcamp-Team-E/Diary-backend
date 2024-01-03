@@ -57,14 +57,11 @@ class DiaryManager(APIView):
 
     # 일기장 링크공유
     @staticmethod
-    def get(request):
-        diary_id = request.GET.get('diary_id')
-
-        if diary_id is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+    def get(request, diary_id):
+        found_diary = get_object_or_404(Diary, diary_id=diary_id)
 
         try:
-            sns_link = DiarySnsLinkSerializer(Diary.objects.get(id=diary_id))
+            sns_link = DiarySnsLinkSerializer(found_diary)
             return Response(status=status.HTTP_200_OK, data=sns_link.data)
         except ObjectDoesNotExist:
             return Response({"error": "diary snsLink does not exist"}, status=status.HTTP_404_NOT_FOUND)

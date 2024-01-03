@@ -19,7 +19,7 @@ class DiaryListSerializer(serializers.ModelSerializer):
 class DiarySnsLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Diary
-        fields = ['sns_link']
+        fields = ['diary_id', 'diary_date', 'sns_link']
 
 
 class DiaryCreateSerializer(serializers.ModelSerializer):
