@@ -3,6 +3,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.generics import get_object_or_404
 
 from .models import Diary
 from .serializers import (DiaryDetailSerializer, DiaryListSerializer, DiarySnsLinkSerializer,
@@ -14,39 +15,53 @@ from .serializers import (DiaryDetailSerializer, DiaryListSerializer, DiarySnsLi
 class Diaries(APIView):
     # 일기장 조회
     @staticmethod
-    def get(request):
-        diary_id = request.GET.get('diary_id')
-        if diary_id is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
+    def get(request, diary_id=None):
+        found_diary = get_object_or_404(Diary, diary_id=diary_id)
         try:
-            found_diary = DiaryDetailSerializer(Diary.objects.get(id=diary_id))
-            return Response(status=status.HTTP_200_OK, data=found_diary.data)
+            serialized_diary = DiaryDetailSerializer(found_diary).data
+            return Response(status=status.HTTP_200_OK, data=serialized_diary)
         except ObjectDoesNotExist:
+            return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
+    # 일기장 생성
+    @staticmethod
+    def post(request):
+        diary_serializer = DiaryCreateSerializer(data=request.data)
+
+        if diary_serializer.is_valid():
+            diary_instance = diary_serializer.save()
+            return Response({"diary_id": diary_instance.pk}, status=status.HTTP_201_CREATED)
+        else:
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
     # 일기장 최종 저장
     @staticmethod
-    def post(request):
-        diary_id = request.GET.pop('diary_id')
+    def put(request, diary_id):
         if diary_id is None:
-            return Response({"error : diary does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "diary does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
-        diary_serializer = DiaryFinalSaveSerializer(diary_id, data=request.data)
+        try:
+            diary_instance = get_object_or_404(Diary, id=diary_id)
+        except ObjectDoesNotExist:
+            return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        diary_serializer = DiaryFinalSaveSerializer(diary_instance, data=request.data)
 
         if diary_serializer.is_valid():
             diary_serializer.save()
-            return Response(status=status.HTTP_201_CREATED)
+            return Response({"message": "Diary saved successfully"}, status=status.HTTP_200_OK)
         else:
-            return Response({"error" : "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class DiaryManager(APIView):
 
     # 일기장 링크공유
-    def get(self, request):
-        pass
+    @staticmethod
+    def get(request, diary_id):
+        found_diary = get_object_or_404(Diary, diary_id=diary_id)
 
-    # 일기장 생성
-    def post(self, request):
-        pass
+        try:
+            sns_link = DiarySnsLinkSerializer(found_diary)
+            return Response(status=status.HTTP_200_OK, data=sns_link.data)
+        except ObjectDoesNotExist:
+            return Response({"error": "diary snsLink does not exist"}, status=status.HTTP_404_NOT_FOUND)
