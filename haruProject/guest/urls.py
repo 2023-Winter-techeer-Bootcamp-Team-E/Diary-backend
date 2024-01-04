@@ -7,6 +7,6 @@ urlpatterns = [
 
     # 추가된 path
     # path('api/v1/guest/<int:guests_id>/', CreateGuestView.as_view(), name='specific_guest'),
-    path('/<int:guests_id>/', CheckGuestPasswordView.as_view(), name='check_guest_password'),
+    path('<int:guests_id>/', CheckGuestPasswordView.as_view(), name='check_guest_password'),
 
 ]

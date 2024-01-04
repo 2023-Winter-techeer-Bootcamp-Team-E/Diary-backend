@@ -15,7 +15,31 @@ class Diary(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
 
-    #calendar
-    # diary_textboxs
-    # diary_stickers
-    # guests
+
+class Textbox(models.Model):
+    textbox_id = models.AutoField(primary_key=True)
+    diary_id = models.ForeignKey(Diary, on_delete=models.CASCADE)
+    writer = models.CharField(max_length=50)
+    content = models.TextField()
+    xcoor = models.IntegerField()
+    ycoor = models.IntegerField()
+    width = models.IntegerField()
+    height = models.IntegerField()
+    rotate = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)
+
+
+class DiarySticker(models.Model):
+    diary_sticker_id = models.AutoField(primary_key=True)
+    diary_id = models.ForeignKey(Diary, on_delete=models.CASCADE)
+    sticker_image_url = models.URLField(max_length=500)
+    xcoor = models.IntegerField()
+    ycoor = models.IntegerField()
+    width = models.IntegerField()
+    height = models.IntegerField()
+    rotate = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)
