@@ -6,7 +6,7 @@ from diary.views import Diaries
 from harucalendar.views import HarucalendarView
 urlpatterns = [
     #path('admin/', admin.site.urls),
-    path('api/v1/members/', include('member.urls'))
+    path('api/v1/members/', include('member.urls')),
     path('admin/', admin.site.urls),
     path('api/v1/calendars', HarucalendarView.as_view()),
     path('api/v1/calendars/', include('harucalendar.urls')),

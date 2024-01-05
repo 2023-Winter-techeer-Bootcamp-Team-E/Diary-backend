@@ -17,6 +17,7 @@ class CreateGuestView(APIView):
 
 
 # 게스트 확인 뷰
+'''
 class CheckGuestPasswordView(APIView):
     def get(self, request, guests_id):
         password = request.query_params.get('password')
@@ -34,3 +35,4 @@ class CheckGuestPasswordView(APIView):
                 "status": "401",
                 "message": "잘못된 비밀번호"
             }, status=401)
+'''
