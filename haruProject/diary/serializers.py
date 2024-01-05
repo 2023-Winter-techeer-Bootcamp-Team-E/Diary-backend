@@ -1,9 +1,26 @@
 from rest_framework import serializers
 
-from .models import Diary
+from .models import Diary, DiaryTextBox, DiarySticker
+
+
+class DiaryTextBoxSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = DiaryTextBox
+        fields = ['textbox_id', 'writer', 'content', 'xcoor', 'ycoor', 'width', 'height', 'rotate']
+
+
+class DiaryStickerSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = DiarySticker
+        fields = ['sticker_id', 'sticker_image_url', 'xcoor', 'ycoor', 'width', 'height', 'rotate']
 
 
 class DiaryDetailSerializer(serializers.ModelSerializer):
+    diaryTextBoxs = DiaryTextBoxSerializer(many=True, read_only=True)
+    diaryStickers = DiaryStickerSerializer(many=True, read_only=True)
+
     class Meta:
         model = Diary
         exclude = ['is_deleted', 'updated_at']
@@ -31,29 +48,21 @@ class DiaryCreateSerializer(serializers.ModelSerializer):
         return Diary.objects.create(**validated_data)
 
 
-class DiaryFinalSaveSerializer(serializers.ModelSerializer):
-    # diary_textboxs = Diary_textbox_Serializer(many=True)
-    # diary_stickers = Diary_sticker_Serializer(many=True)
+class DiaryTextBoxCreateSerializer(serializers.ModelSerializer):
+
     class Meta:
-        model = Diary
-        # textBoxs, stickers
+        model = DiaryTextBox
+        fields = ['writer', 'content', 'xcoor', 'ycoor', 'width', 'height', 'rotate']
 
-    def update(self, instance, validated_data):
-        instance.title = validated_data.get('title', instance.title)
-        instance.diary_date = validated_data.get('diary_date', instance.diary_date)
-        instance.diary_day = validated_data.get('diary_day', instance.diary_day)
-        instance.sns_link = validated_data.get('sns_link', instance.sns_link)
-        instance.diary_bg_url = validated_data.get('diary_bg_url', instance.diary_bg_url)
-        instance.save()
+    def create(self, validated_data):
+        return DiaryTextBox.objects.create(**validated_data)
 
-        # # Update or create TextBox instances
-        # textBoxs_data = validated_data.pop('textBoxs', [])
-        # for textBox_data in textBoxs_data:
-        #     TextBox.objects.update_or_create(diary=instance, **textBox_data)
-        #
-        # # Update or create Sticker instances
-        # stickers_data = validated_data.pop('stickers', [])
-        # for sticker_data in stickers_data:
-        #     Sticker.objects.update_or_create(diary=instance, **sticker_data)
 
-        return instance
+class DiaryStickerCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DiarySticker
+        fields = ['sticker_image_url', 'xcoor', 'ycoor', 'width', 'height', 'rotate']
+
+    def create(self, validated_data):
+        return DiarySticker.objects.create(**validated_data)
+
