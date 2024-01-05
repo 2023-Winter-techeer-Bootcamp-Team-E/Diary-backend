@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Member
 from django.db import IntegrityError
 
+
 class MemberSerializer(serializers.Serializer):
     login_id = serializers.CharField()
     nickname = serializers.CharField()
@@ -52,7 +53,3 @@ class SignSerializer(serializers.Serializer):
 
         # 최종적으로 검증된 데이터 반환
         return validated_data
-
-
-
-
