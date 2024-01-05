@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from .serializers import GuestSerializer
 from django.shortcuts import get_object_or_404
 
+
 # 게스트 생성 뷰
 class CreateGuestView(APIView):
     def post(self, request, *args, **kwargs):

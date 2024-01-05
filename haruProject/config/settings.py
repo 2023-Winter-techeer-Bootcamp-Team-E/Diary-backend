@@ -60,7 +60,7 @@ INSTALLED_APPS = [
     'diary',
     'rest_framework',
     'member',
-    'guest'
+    'guest',
     'harucalendar',
 ]
 
