@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from .serializers import GuestSerializer
 from django.shortcuts import get_object_or_404
 
+
 # 게스트 생성 뷰
 class CreateGuestView(APIView):
     def post(self, request, *args, **kwargs):
@@ -17,6 +18,7 @@ class CreateGuestView(APIView):
 
 
 # 게스트 확인 뷰
+'''
 class CheckGuestPasswordView(APIView):
     def get(self, request, guests_id):
         password = request.query_params.get('password')
@@ -34,3 +36,4 @@ class CheckGuestPasswordView(APIView):
                 "status": "401",
                 "message": "잘못된 비밀번호"
             }, status=401)
+'''
