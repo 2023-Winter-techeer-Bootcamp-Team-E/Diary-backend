@@ -1,10 +1,11 @@
 from django.db import models
+from harucalendar.models import Harucalendar
 
-
-# Create your models here.
+# Create your models here
 
 class Diary(models.Model):
     diary_id = models.AutoField(primary_key=True)
+    calendar_id = models.ForeignKey(Harucalendar,on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     diary_date = models.CharField(max_length=10)
     diary_day = models.CharField(max_length=10)

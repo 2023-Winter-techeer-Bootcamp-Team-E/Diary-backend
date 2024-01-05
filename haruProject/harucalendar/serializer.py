@@ -2,7 +2,6 @@ from .models import Harucalendar, Harucalendarsticker
 from rest_framework import serializers
 
 
-
 class HarucalendarAllSerializer(serializers.ModelSerializer):
     class Meta:
         model = Harucalendar
@@ -12,4 +11,4 @@ class HarucalendarAllSerializer(serializers.ModelSerializer):
 class HarucalendarstickerAllSerializer(serializers.ModelSerializer):
     class Meta:
         model = Harucalendarsticker
-        fields='__all__'
+        fields = '__all__'

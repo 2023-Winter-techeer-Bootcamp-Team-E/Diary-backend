@@ -1,17 +1,16 @@
 from django.db import models
 
 
-
 # Create your models here.
 class Users(models.Model):
-    member_id = models.AutoField(primary_key=True)
-    nickname = models.CharField(max_length=50)
+    member_id = models.AutoField(primary_key=True,)
+    nickname = models.CharField(max_length=50, blank=True, null=True)
 
 
 class Harucalendar(models.Model):
     calendar_id = models.AutoField(primary_key=True)
-    member_id = models.ForeignKey(Users, on_delete=models.CASCADE)
-    year_month = models.DateTimeField(auto_now_add=True)
+    member = models.ForeignKey(Users,related_name='harucalendar', on_delete=models.CASCADE)
+    year_month_day = models.CharField(max_length=10)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
@@ -26,6 +25,6 @@ class Harucalendarsticker(models.Model):
     width = models.IntegerField()
     height = models.IntegerField()
     rolate = models.IntegerField()
-    created_at = models.TimeField(auto_now_add=True)
-    updated_at = models.TimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
