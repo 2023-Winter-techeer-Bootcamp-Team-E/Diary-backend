@@ -48,6 +48,7 @@ class DiaryCreateSerializer(serializers.ModelSerializer):
         return Diary.objects.create(**validated_data)
 
 
+
 class DiaryTextBoxCreateSerializer(serializers.ModelSerializer):
 
     class Meta:

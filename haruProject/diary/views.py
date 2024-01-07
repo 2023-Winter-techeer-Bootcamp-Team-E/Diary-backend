@@ -4,10 +4,15 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.exceptions import ValidationError
+
+from member.models import Member
+from member.serializers import MemberSerializer
 from .models import Diary
 from .serializers import (DiaryDetailSerializer, DiaryListSerializer, DiarySnsLinkSerializer,
                           DiaryCreateSerializer, DiaryTextBoxCreateSerializer,
                           DiaryStickerCreateSerializer, DiaryTextBoxSerializer)
+from harucalendar.models import Harucalendar
+from harucalendar.serializer import HarucalendarCreateSerializer
 
 
 # Create your views here.
@@ -26,13 +31,49 @@ class Diaries(APIView):
     # 일기장 생성
     @staticmethod
     def post(request):
-        diary_serializer = DiaryCreateSerializer(data=request.data)
+        calendar_id = request.data.get('calendar_id')
+        member_id = request.data.get('member_id')
 
-        if diary_serializer.is_valid():
-            diary_instance = diary_serializer.save()
-            return Response({"diary_id": diary_instance.pk}, status=status.HTTP_201_CREATED)
+        # 날짜에서 연월만 추출
+        year_month_day = request.data.get('diary_date')
+
+        # 캘린더가 없을때
+        print(calendar_id, member_id, year_month_day)
+        if calendar_id is None:
+            member_instance = get_object_or_404(Member, member_id=member_id)  # 멤버 인스턴스 받아오기
+            calendar_serializer = HarucalendarCreateSerializer(data={'year_month_day': year_month_day})  # 캘린더 생성
+            if calendar_serializer.is_valid():
+                calendar_serializer.save(member_id=member_instance)  # 캘린더 생성 완료
+                # 캘린더 생성 후 일기장 저장.
+                new_calendar_pk = calendar_serializer.instance.pk
+                new_calendar_instance = get_object_or_404(Harucalendar, calendar_id=new_calendar_pk)
+                diary_serializer = DiaryCreateSerializer(data=request.data)
+                if diary_serializer.is_valid():
+                    diary_serializer.save(calendar_id=new_calendar_instance)
+                    return Response(diary_serializer.data, status=status.HTTP_200_OK)
+                else:
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+            else:
+                print(calendar_serializer.errors)
+                return Response({'errors': '데이터 값이 유효하지 않습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+        #캘린더가 있을떄(diary_id가 있을떄)
         else:
-            return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
+            calendar_instance=get_object_or_404(Harucalendar, calendar_id = request.data.get('calendar_id'))
+            calendar_duplication = Harucalendar.objects.filter(year_month_day=request.data.get('diary_date'))
+            if calendar_duplication:
+                return Response({'error':'해당일에 이미 일기가 있습니다.'},status=status.HTTP_400_BAD_REQUEST)
+            diary_serializer=DiaryCreateSerializer(data=request.data)
+            if diary_serializer.is_valid():
+                diary_serializer.save(calendar_id=calendar_instance)
+                return Response(status=status.HTTP_200_OK)
+            else:
+                print(diary_serializer.errors)
+                return Response(diary_serializer.data, status=status.HTTP_400_BAD_REQUEST)
+
 
     # 일기장 최종 저장
     @staticmethod

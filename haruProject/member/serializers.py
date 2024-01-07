@@ -30,6 +30,9 @@ class MemberSerializer(serializers.Serializer):
                 "message": "이미 존재하는 로그인 ID입니다."
             }
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Member
 
 class SignSerializer(serializers.Serializer):
     login_id = serializers.CharField()
