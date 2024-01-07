@@ -10,8 +10,8 @@ class Diary(models.Model):
     title = models.CharField(max_length=100)
     diary_date = models.CharField(max_length=10)
     diary_day = models.CharField(max_length=10)
-    sns_link = models.URLField(max_length=500)
-    diary_bg_url = models.URLField(max_length=500)
+    sns_link = models.CharField(max_length=500)
+    diary_bg_url = models.CharField(max_length=500)
     is_expiry = models.BooleanField(default=False, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -28,9 +28,9 @@ class DiaryTextBox(models.Model):
     width = models.IntegerField()
     height = models.IntegerField()
     rotate = models.IntegerField()
-    # created_at = models.DateTimeField(auto_now_add=True)
-    # updated_at = models.DateTimeField(auto_now=True)
-    # is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)
 
 
 class DiarySticker(models.Model):
@@ -42,6 +42,6 @@ class DiarySticker(models.Model):
     width = models.IntegerField()
     height = models.IntegerField()
     rotate = models.IntegerField()
-    # created_at = models.DateTimeField(auto_now_add=True)
-    # updated_at = models.DateTimeField(auto_now=True)
-    # is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)

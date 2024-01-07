@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db import models
 from member.models import Member
 
@@ -7,8 +9,8 @@ from member.models import Member
 
 class Harucalendar(models.Model):
     calendar_id = models.AutoField(primary_key=True)
-    member = models.ForeignKey(Member, related_name='harucalendar', on_delete=models.CASCADE)
-    year_month_day = models.CharField(max_length=10)
+    member_id = models.ForeignKey(Member, related_name='harucalendar', on_delete=models.CASCADE)
+    year_month_day = models.CharField(max_length=15)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
