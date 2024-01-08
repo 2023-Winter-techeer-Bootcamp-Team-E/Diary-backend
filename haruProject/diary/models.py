@@ -6,7 +6,7 @@ from harucalendar.models import Harucalendar
 
 class Diary(models.Model):
     diary_id = models.AutoField(primary_key=True)
-    calendar_id = models.ForeignKey(Harucalendar, on_delete=models.CASCADE)
+    calendar = models.ForeignKey(Harucalendar, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     diary_date = models.CharField(max_length=10)
     diary_day = models.CharField(max_length=10)

@@ -18,13 +18,13 @@ class HarucalendarView(APIView):  # 캘린더 조회
             month = request.GET.get('month')
             day = request.GET.get('day')
             year_month_day = f'{year}{month}{day}'
-            harucalendar = get_object_or_404(Harucalendar, member_id=member_id, year_month_day=year_month_day)
+            harucalendar = get_object_or_404(Harucalendar, member=member_id, year_month_day=year_month_day)
 
         except ObjectDoesNotExist:
             return Response({'message': '달력이 존재하지 않습니다.'},
                             status=status.HTTP_404_NOT_FOUND)
 
-        diary = Diary.objects.filter(calendar_id=harucalendar.calendar_id)
+        diary = Diary.objects.filter(calendar=harucalendar.calendar_id)
         diary_list = []
 
         for item in diary:  # 하루다이어리에서 다이어리id, 만료여부를 리스트에 저장
@@ -62,10 +62,10 @@ class HarucalendarstickerView(APIView):
                     harucalendar_instance = get_object_or_404(Harucalendar, calendar_id=calendar_id)
                     sticker_serializer = HarucalendarStickerCreateSerializer(data=sticker_data)
                     if sticker_serializer.is_valid():
-                        sticker_serializer.save(calendar_id=harucalendar_instance)
+                        sticker_serializer.save(calendar=harucalendar_instance)
                     else:
                         print(sticker_serializer.errors)
-                        return Response({'error': '때려쳐 시발'}, status=status.HTTP_400_BAD_REQUEST)
+                        return Response(status=status.HTTP_400_BAD_REQUEST)
 
             return Response({'code': 'c002', 'status': '200', 'message': '스티커 추가 성공'}, status=200)
 
