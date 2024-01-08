@@ -18,7 +18,7 @@ class Harucalendar(models.Model):
 
 class Harucalendarsticker(models.Model):
     calendar_sticker_id = models.AutoField(primary_key=True)
-    calendar= models.ForeignKey(Harucalendar, on_delete=models.CASCADE)
+    calendar = models.ForeignKey(Harucalendar, on_delete=models.CASCADE)
     sticker_image_url = models.CharField(max_length=500, unique=True)
     xcoor = models.IntegerField()
     ycoor = models.IntegerField()
