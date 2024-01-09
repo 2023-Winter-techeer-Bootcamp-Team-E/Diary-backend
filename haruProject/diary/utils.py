@@ -5,6 +5,8 @@ import requests
 from PIL import Image
 from io import BytesIO
 from rembg import remove
+from config.settings import DALLE_API_KEY
+
 
 def extract_top_keywords(diary_text):
     comprehend_client = boto3.client('comprehend', region_name='ap-northeast-2')
@@ -36,7 +38,7 @@ def get_korean_stopwords():
     return stopwords
 
 def generate_sticker_image(keyword):
-    client = OpenAI(api_key="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")
+    client = OpenAI(api_key=DALLE_API_KEY)
 
     response = client.images.generate(
         model="dall-e-3",
