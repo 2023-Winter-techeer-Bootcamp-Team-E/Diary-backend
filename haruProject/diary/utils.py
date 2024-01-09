@@ -75,10 +75,8 @@ def generate_sticker_images(keywords):
 
         output_data = remove_background(image_data)
 
-        with open(f"{keyword}_sticker_image_no_bg.png", "wb") as f:
-            f.write(output_data)
-
-        sticker_image_urls[keyword] = f"{keyword}_sticker_image_no_bg.png"
-        print(f"스티커 이미지 파일 경로 ({keyword}): {sticker_image_urls[keyword]}")
+        sticker_image_urls[keyword] = output_data
+        # 키: 키워드 (예: "happy", "love", 등)
+        # 값: 해당 키워드에 대한 스티커 이미지의 PNG 형식 binary data
 
     return sticker_image_urls

@@ -139,24 +139,26 @@ class DiaryTextBoxManager(APIView):
 
 
 
-class TextBoxSticker(APIView):
+class DiaryStickerManager(APIView):
     def post(self, request, format=None):
+        print(request.POST.get('_content'))
         try:
-            content = request.data.get('content', '')
+            content = request.POST.get('_content')
 
             # DiaryTextBox 모델에 데이터 저장
-            diary_text_box = DiaryTextBox.objects.create(content=content)
+            # diary_text_box = DiaryTextBox.objects.create(content=content)
 
             # 일기 내용에서 상위 3개 키워드 추출
             top_keywords = extract_top_keywords(content)
 
             # 상위 키워드로 DALL-E API 호출하여 스티커 이미지 생성
             sticker_image_urls = generate_sticker_images(top_keywords)
-
+            print("이미지 생성 하고 url 반환")
+            print(sticker_image_urls)
             # 이미지 업로드 및 URL 반환
             uploaded_image_urls = []
             for keyword, sticker_url in sticker_image_urls.items():
-                response = self.upload_image_to_s3(keyword, sticker_url)
+                response = self.upload_image_to_s3(sticker_url, keyword)
                 uploaded_image_urls.append(response['image_url'])
 
             response_data = {
@@ -179,17 +181,13 @@ class TextBoxSticker(APIView):
             }
             return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def upload_image_to_s3(self, keyword, sticker_url):
+    def upload_image_to_s3(self, image_data, keyword):
         try:
-            # 이미지 다운로드
-            response = requests.get(sticker_url)
-            image_data = response.content
-
-            # 파일 이름 설정 (여기서는 UUID 사용)
-            file_name = f"{keyword}_{str(uuid.uuid4())}.png"
-
             # AWS S3 연결
             s3_client = boto3.client('s3', region_name='ap-northeast-2')
+
+            # 파일 이름 설정 (여기서는 UUID 사용)
+            file_name = f"{keyword.replace(' ', '_')}_{str(uuid.uuid4())}.png"
 
             # S3 버킷에 파일 업로드
             s3_client.put_object(
