@@ -7,13 +7,17 @@ from rest_framework.exceptions import ValidationError
 
 from member.models import Member
 from member.serializers import MemberSerializer
-from .models import Diary
+from .models import Diary, DiaryTextBox
 from .serializers import (DiaryDetailSerializer, DiaryListSerializer, DiarySnsLinkSerializer,
                           DiaryCreateSerializer, DiaryTextBoxCreateSerializer,
                           DiaryStickerCreateSerializer, DiaryTextBoxSerializer)
 from harucalendar.models import Harucalendar
 from harucalendar.serializer import HarucalendarCreateSerializer
-
+from .utils import extract_top_keywords, generate_sticker_images
+from botocore.exceptions import NoCredentialsError
+import boto3
+import uuid
+import requests
 
 # Create your views here.
 
@@ -134,3 +138,75 @@ class DiaryTextBoxManager(APIView):
 
 
 
+
+class DiaryStickerManager(APIView):
+    def post(self, request, format=None):
+        print(request.POST.get('_content'))
+        try:
+            content = request.POST.get('_content')
+
+            # DiaryTextBox 모델에 데이터 저장
+            # diary_text_box = DiaryTextBox.objects.create(content=content)
+
+            # 일기 내용에서 상위 3개 키워드 추출
+            top_keywords = extract_top_keywords(content)
+
+            # 상위 키워드로 DALL-E API 호출하여 스티커 이미지 생성
+            sticker_image_urls = generate_sticker_images(top_keywords)
+            print("이미지 생성 하고 url 반환")
+            print(sticker_image_urls)
+            # 이미지 업로드 및 URL 반환
+            uploaded_image_urls = []
+            for keyword, sticker_url in sticker_image_urls.items():
+                response = self.upload_image_to_s3(sticker_url, keyword)
+                uploaded_image_urls.append(response['image_url'])
+
+            response_data = {
+                'code': 'D001',
+                'status': '201',
+                'message': '이미지 생성 성공',
+                'data': {
+                    'sticker_image_urls': uploaded_image_urls,
+                }
+            }
+
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        except NoCredentialsError:
+            return Response({"message": "AWS credentials not available."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            response_data = {
+                'code': 'D001',
+                'status': '500',
+                'message': f'에러 발생: {str(e)}',
+            }
+            return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def upload_image_to_s3(self, image_data, keyword):
+        try:
+            # AWS S3 연결
+            s3_client = boto3.client('s3', region_name='ap-northeast-2')
+
+            # 파일 이름 설정 (여기서는 UUID 사용)
+            file_name = f"{keyword.replace(' ', '_')}_{str(uuid.uuid4())}.png"
+
+            # S3 버킷에 파일 업로드
+            s3_client.put_object(
+                Body=image_data,
+                Bucket='harudiary-sticker-bucket',
+                Key=file_name,
+                ContentType='image/png',
+            )
+
+            # 업로드된 이미지의 S3 URL 반환
+            image_url = f"https://harudiary-sticker-bucket.s3.amazonaws.com/{file_name}"
+
+            return {
+                'status': 'success',
+                'message': '이미지 업로드 성공',
+                'image_url': image_url,
+            }
+        except Exception as e:
+            return {
+                'status': 'error',
+                'message': f'이미지 업로드 에러: {str(e)}',
+            }
