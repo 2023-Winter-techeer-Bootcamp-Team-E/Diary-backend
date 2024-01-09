@@ -85,7 +85,8 @@ CORS_ORIGIN_WHITELIST = [
     "http://localhost:5173"
 ]
 CORS_ALLOW_CREDENTIALS = True
-ALLOWED_HOSTS = ["backend", "localhost"]
+ALLOWED_HOSTS = ["backend", "localhost", '127.0.0.1']
+
 
 ROOT_URLCONF = 'config.urls'
 

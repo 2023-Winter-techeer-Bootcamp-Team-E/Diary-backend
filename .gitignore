@@ -127,6 +127,7 @@ celerybeat.pid
 
 # Environments
 .env
+haruProject/.env
 .venv
 env/
 venv/
