@@ -16,7 +16,7 @@ import boto3
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 '''
 2. 각 호출자가 기본 매개변수를 전달할 필요가 없도록 환경 변수의 체계 기반 조회를 제공합니다.
 라고 번역하니 나와있는데, 무슨말인지 생각해보니 환경변수를 불러올 수 있는 상태로 세팅한다고
@@ -40,7 +40,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = ["*"]
+
 
 # AUTH_USER_MODEL = 'member.Member'
 
@@ -50,12 +50,14 @@ INSTALLED_APPS = [
     'daphne',
     'channels',
     'corsheaders',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'diary',
     'rest_framework',
     'member',
@@ -71,7 +73,19 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+
 ]
+# CORS 설정 - whitelist 에 추가된 주소 접근 허용
+CORS_ORIGIN_WHITELIST = [
+    "http://127.0.0.1:3000",
+    "http://localhost:3000",
+    "http://frontend:3000",
+    "http://backend:8000",
+    "http://localhost:5173"
+]
+CORS_ALLOW_CREDENTIALS = True
+ALLOWED_HOSTS = ["backend", "localhost"]
 
 ROOT_URLCONF = 'config.urls'
 
