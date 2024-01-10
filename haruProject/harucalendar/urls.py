@@ -7,4 +7,6 @@ urlpatterns = [
 
 
     path('stickers', HarucalendarstickerView.as_view()),
+
+
 ]

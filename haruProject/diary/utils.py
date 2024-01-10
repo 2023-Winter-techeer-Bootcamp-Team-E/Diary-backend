@@ -26,9 +26,11 @@ def extract_top_keywords(diary_text):
 
     return [keyword[0] for keyword in top_keywords]
 
+
 def preprocess_diary_text(diary_text):
     cleaned_text = ''.join(char for char in diary_text if char.isalnum() or char.isspace())
     return cleaned_text
+
 
 def get_korean_stopwords():
     stopwords = [
@@ -36,6 +38,7 @@ def get_korean_stopwords():
         "여서", "그리고"
     ]
     return stopwords
+
 
 def generate_sticker_image(keyword):
     client = OpenAI(api_key=DALLE_API_KEY)
@@ -51,9 +54,10 @@ def generate_sticker_image(keyword):
     image_url = response.data[0].url
     return image_url
 
+
 def remove_background(image_data):
     with Image.open(BytesIO(image_data)) as img:
-        #이미지 크기 조절
+        # 이미지 크기 조절
         img = img.resize((300, 300))
 
         new_img = remove(img)
