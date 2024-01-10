@@ -1,4 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -6,7 +7,6 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.exceptions import ValidationError
 
 from member.models import Member
-from member.serializers import MemberSerializer
 from .models import Diary, DiaryTextBox
 from .serializers import (DiaryDetailSerializer, DiaryListSerializer, DiarySnsLinkSerializer,
                           DiaryCreateSerializer, DiaryTextBoxCreateSerializer,
@@ -20,13 +20,17 @@ import uuid
 import time
 import requests
 
+from .swaggerserializer import DiaryGetRequestSerializer, DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer
+
+
 # Create your views here.
 
 class Diaries(APIView):
     # 일기장 조회
-    @staticmethod
-    def get(request, diary_id):
+    @swagger_auto_schema(query_serializer=DiaryGetRequestSerializer, responses={200: DiaryGetResponseSerializer})
+    def get(self, request, diary_id):
         found_diary = get_object_or_404(Diary, diary_id=diary_id)
+
         try:
             serialized_diary = DiaryDetailSerializer(found_diary).data
             return Response(status=status.HTTP_200_OK, data=serialized_diary)
@@ -36,11 +40,13 @@ class Diaries(APIView):
     # 일기장 생성
     @staticmethod
     def post(request):
+        # 쿠키로 받아서 쓸거임 claendar id, member-id
         calendar_id = request.data.get('calendar_id')
         member_id = request.data.get('member_id')
-
+        # 쿠키 세션을 받아와서 켈린더,맴버 아이디를 찾아온다음,
         # 날짜에서 연월만 추출
-        year_month_day = request.data.get('diary_date')
+
+        year_month_day = request.data.get('diary_date')  # 이건 받아서 쓸거임
 
         # 캘린더가 없을때
         if calendar_id is None:
@@ -79,19 +85,18 @@ class Diaries(APIView):
     # 일기장 최종 저장
 
 
+# 일기장 링크공유
 class DiaryManager(APIView):
+    @swagger_auto_schema(responses={200:DiaryLinkGetResponseSerializer})
+    def get(self, request, diary_id):
 
-    # 일기장 링크공유
-    @staticmethod
-    def get(request, diary_id):
-        found_diary = get_object_or_404(Diary, diary_id=diary_id)
+        found_diary = Diary.objects.get(diary_id=diary_id)
 
         try:
             sns_link = DiarySnsLinkSerializer(found_diary)
             return Response(status=status.HTTP_200_OK, data=sns_link.data)
         except ObjectDoesNotExist:
             return Response({"error": "diary snsLink does not exist"}, status=status.HTTP_404_NOT_FOUND)
-
 
 
 class DiaryTextBoxManager(APIView):
@@ -122,22 +127,20 @@ class DiaryTextBoxManager(APIView):
         except ValidationError as e:
             return Response(status=status.HTTP_200_OK)
 
-#텍스트 박스 저장, text만 받아서 텍스트 박스 생성해주고, 텍스트박스 아이디 값 반환, 내용->comprehend 전달
-#notnull이면 안되므로 초기 좌표값,너비,등등 미리 저장 후 추후 최종저장
-#null =true 바꾸면 안될거 같아서
+    # 텍스트 박스 저장, text만 받아서 텍스트 박스 생성해주고, 텍스트박스 아이디 값 반환, 내용->comprehend 전달
+    # notnull이면 안되므로 초기 좌표값,너비,등등 미리 저장 후 추후 최종저장
+    # null =true 바꾸면 안될거 같아서
     @staticmethod
     def post(request):
-        diary_instance = get_object_or_404(Diary,diary_id=request.data.get('diary_id'))
-        diarytextbox_serializer=DiaryTextBoxCreateSerializer(data=request.data)
+        diary_instance = get_object_or_404(Diary, diary_id=request.data.get('diary_id'))
+        diarytextbox_serializer = DiaryTextBoxCreateSerializer(data=request.data)
         if diarytextbox_serializer.is_valid():
-            diarytextbox_pk=diarytextbox_serializer.save(diary=diary_instance)
-            return Response({'data': diarytextbox_pk.pk},status=status.HTTP_201_CREATED)
+            diarytextbox_pk = diarytextbox_serializer.save(diary=diary_instance)
+            return Response({'data': diarytextbox_pk.pk}, status=status.HTTP_201_CREATED)
 
         else:
             print(diarytextbox_serializer.errors)
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 class DiaryStickerManager(APIView):
