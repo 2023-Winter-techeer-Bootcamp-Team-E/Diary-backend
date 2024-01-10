@@ -15,7 +15,7 @@ import environ
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 '''
 2. 각 호출자가 기본 매개변수를 전달할 필요가 없도록 환경 변수의 체계 기반 조회를 제공합니다.
 라고 번역하니 나와있는데, 무슨말인지 생각해보니 환경변수를 불러올 수 있는 상태로 세팅한다고
@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'member',
     'guest',
     'harucalendar',
+    'diaryRoom',
 ]
 
 MIDDLEWARE = [
@@ -94,6 +95,8 @@ TEMPLATES = [
 ]
 
 ASGI_APPLICATION = 'config.asgi.application'
+# CHHANNEL_LAYERS = {
+#
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
@@ -144,6 +147,4 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
 
