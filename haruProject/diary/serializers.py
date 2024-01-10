@@ -62,3 +62,4 @@ class DiaryStickerCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return DiarySticker.objects.create(**validated_data)
+

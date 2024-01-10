@@ -40,8 +40,6 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-
-
 # AUTH_USER_MODEL = 'member.Member'
 
 # Application definition
@@ -63,6 +61,9 @@ INSTALLED_APPS = [
     'member',
     'guest',
     'harucalendar',
+    'drf_yasg',
+    'rest_framework_swagger',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -78,22 +79,21 @@ MIDDLEWARE = [
 ]
 # CORS 설정 - whitelist 에 추가된 주소 접근 허용
 CORS_ORIGIN_WHITELIST = [
-    "http://127.0.0.1:3000",
+    "http://127.0.0.1:8000",
     "http://localhost:3000",
     "http://frontend:3000",
     "http://backend:8000",
     "http://localhost:5173"
 ]
 CORS_ALLOW_CREDENTIALS = True
-ALLOWED_HOSTS = ["backend", "localhost"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
-        ,
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -176,12 +176,14 @@ AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_USE_SSL = True
 
 # Static files (CSS, JavaScript, images)
-STATIC_URL = f"{AWS_S3_URL_PROTOCOL}://{AWS_S3_CUSTOM_DOMAIN}/static/"
-STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+#STATIC_URL = f"{AWS_S3_URL_PROTOCOL}://{AWS_S3_CUSTOM_DOMAIN}/static/"
+#STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # Media files (uploads)
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-MEDIA_URL = f"{AWS_S3_URL_PROTOCOL}://{AWS_S3_CUSTOM_DOMAIN}/media/"
+#DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+#MEDIA_URL = f"{AWS_S3_URL_PROTOCOL}://{AWS_S3_CUSTOM_DOMAIN}/media/"
 
-
-
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'JSON_EDITOR': True,
+}

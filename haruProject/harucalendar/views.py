@@ -1,25 +1,30 @@
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.generics import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, permissions
 from .models import Harucalendar
 from .serializer import HarucalendarAllSerializer, HarucalendarstickerAllSerializer, \
     HarucalendarStickerCreateSerializer, HarucalendarCreateSerializer
 from rest_framework.views import APIView
 from diary.models import Diary
 
+from .swaggerserializer import HarucalendarstickerRequestSerializer, HarucalendarstickerGetResponseSerializer, \
+    HarucalendarRequestSerializer, HarucalendarGetResponseSerializer
+
 
 class HarucalendarView(APIView):  # 캘린더 조회
-    @staticmethod
-    def get(request, member_id):
+
+    @swagger_auto_schema(query_serializer=HarucalendarRequestSerializer,
+                         responses={200: HarucalendarGetResponseSerializer})
+    def get(self, request):
         try:
-
-            year = request.GET.get('year')
-            month = request.GET.get('month')
-            day = request.GET.get('day')
-            year_month_day = f'{year}{month}{day}'
+            member_id = request.query_params.get('member_id')
+            year_month_day = request.query_params.get('year_month_day') #뉴진스랑 상의
             harucalendar = get_object_or_404(Harucalendar, member=member_id, year_month_day=year_month_day)
-
+            # 조회가 성공하면 쿠키에 켈린더아이디랑 멤버아이디 기입, 기존 멤버아이디가 있는 쿠키에 캘린더 아이디를 심어 쓰기 선택.
+            #만든걸 리스폰스에 같이 심어서 보내주기.
         except ObjectDoesNotExist:
             return Response({'message': '달력이 존재하지 않습니다.'},
                             status=status.HTTP_404_NOT_FOUND)
@@ -46,18 +51,19 @@ class HarucalendarView(APIView):  # 캘린더 조회
 
 
 class HarucalendarstickerView(APIView):
-    @staticmethod
-    def post(request):
+    @swagger_auto_schema(query_serializer=HarucalendarstickerRequestSerializer,
+                         responses={200: HarucalendarstickerGetResponseSerializer})
+    def post(self, request):
         try:
             stickers_data = request.data.get('stickers', [])
             for sticker_data in stickers_data:
                 calendar_id = sticker_data.get('calendar_id')
-                sticker_url= sticker_data.get('sticker_image_url')
+                sticker_url = sticker_data.get('sticker_image_url')
                 if calendar_id is None:
                     return Response({'error': 'stickers 내부의 calendar_id가 제공되지 않았습니다.'},
                                     status=status.HTTP_400_BAD_REQUEST)
                 elif sticker_url is None:
-                    return Response({'error': '스티커 URL이 없습니다.'},status=status.HTTP_400_BAD_REQUEST)
+                    return Response({'error': '스티커 URL이 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
                 else:
                     harucalendar_instance = get_object_or_404(Harucalendar, calendar_id=calendar_id)
                     sticker_serializer = HarucalendarStickerCreateSerializer(data=sticker_data)
@@ -73,3 +79,13 @@ class HarucalendarstickerView(APIView):
             return Response({'error': '켈린더가 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
 
 
+'''
+class serializertest(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    @swagger_auto_schema(query_serializer=IncrementedValueSerializer,responses={"200":GetResponseSerializer})
+    def get(self, request):
+        result = request.get.get('value')
+        result = result + 10
+        return Response({'data': result}, status=status.HTTP_200_OK)
+'''
