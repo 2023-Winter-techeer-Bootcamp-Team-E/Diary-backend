@@ -39,7 +39,28 @@ class HarucalendarView(APIView):  # 캘린더 조회
                 'diary_day': item.diary_day
             })
 
+
+        # calendar_session_list = []
+        # for item in Diary.objects.all():
+        #     diary_textboxes = item.diaryTextBoxs.all()
+        #
+        #     calendar_session_list.append({
+        #         'diary_date': item.diary_date,  # DiaryTextBox 모델의 diary_date 가져오기
+        #         'is_expird': item.is_expiry,
+        #         'day': item.diary_day,
+        #         'diary_textboxes': [{'writer': textbox.writer, 'content': textbox.content} for textbox in
+        #                             diary_textboxes]
+        #     })
+
+        # request.session['calendar_session_list'] = calendar_session_list
+
         harucalendarserializer = HarucalendarAllSerializer(harucalendar)  # 캘린더 시리얼라이징
+
+        request.session['calendar_id'] = harucalendarserializer.data['calendar_id']
+
+        # session checking
+        # for key, value in request.session.items():
+        #     print(f'세션 키: {key}, 세션 값: {value}')
 
         return Response({
             'code': 'C001',
