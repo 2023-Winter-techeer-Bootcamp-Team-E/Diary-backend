@@ -5,7 +5,7 @@ from rest_framework import serializers
 class HarucalendarAllSerializer(serializers.ModelSerializer):
     class Meta:
         model = Harucalendar
-        fields = '__all__'
+        exclude = ['is_deleted', 'updated_at','created_at']
 
 
 class HarucalendarstickerAllSerializer(serializers.ModelSerializer):
