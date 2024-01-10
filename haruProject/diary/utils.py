@@ -42,7 +42,7 @@ def generate_sticker_image(keyword):
 
     response = client.images.generate(
         model="dall-e-3",
-        prompt=f"{keyword} 스티커",
+        prompt=f"{keyword}가 들어간 일러스트 느낌의 스티커",
         size="1024x1024",
         quality="standard",
         n=1,
@@ -53,8 +53,8 @@ def generate_sticker_image(keyword):
 
 def remove_background(image_data):
     with Image.open(BytesIO(image_data)) as img:
-        #이미지 크기 조절
-        img = img.resize((300, 300))
+        #이미지 크기 조절 - 프론트엔드와 API연결 후 로딩시간 체크한 뒤에 이미지 사이즈 조절하는 걸로
+        #img = img.resize((300, 300))
 
         new_img = remove(img)
 
