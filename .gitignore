@@ -126,6 +126,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+.env
 haruProject/.env
 .venv
 env/
