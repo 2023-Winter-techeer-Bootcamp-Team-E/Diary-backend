@@ -90,7 +90,6 @@ CORS_ORIGIN_WHITELIST = [
 CORS_ALLOW_CREDENTIALS = True
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
-
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
