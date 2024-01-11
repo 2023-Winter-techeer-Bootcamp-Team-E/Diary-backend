@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'harucalendar',
     'drf_yasg',
     'storages',
+    'static'
 ]
 
 MIDDLEWARE = [

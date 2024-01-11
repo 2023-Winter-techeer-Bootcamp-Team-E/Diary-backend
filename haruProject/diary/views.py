@@ -17,6 +17,8 @@ from .utils import extract_top_keywords, generate_sticker_images
 from botocore.exceptions import NoCredentialsError
 import boto3
 import uuid
+import time
+import requests
 
 from .swaggerserializer import DiaryGetRequestSerializer, DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer
 
@@ -143,6 +145,7 @@ class DiaryTextBoxManager(APIView):
 
 class DiaryStickerManager(APIView):
     def post(self, request, format=None):
+        start = time.time()
         print(request.POST.get('_content'))
         try:
             content = request.POST.get('_content')
@@ -155,8 +158,7 @@ class DiaryStickerManager(APIView):
 
             # 상위 키워드로 DALL-E API 호출하여 스티커 이미지 생성
             sticker_image_urls = generate_sticker_images(top_keywords)
-            print("이미지 생성 하고 url 반환")
-            print(sticker_image_urls)
+
             # 이미지 업로드 및 URL 반환
             uploaded_image_urls = []
             for keyword, sticker_url in sticker_image_urls.items():
@@ -171,7 +173,8 @@ class DiaryStickerManager(APIView):
                     'sticker_image_urls': uploaded_image_urls,
                 }
             }
-
+            end = time.time()
+            print(f"{end - start:.5f} sec")
             return Response(response_data, status=status.HTTP_201_CREATED)
         except NoCredentialsError:
             return Response({"message": "AWS credentials not available."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
