@@ -47,3 +47,13 @@ class DiaryLinkGetResponseSerializer(serializers.Serializer):
     status = serializers.CharField()
     message = serializers.CharField()
     data = DiaryLinkResponseSerializer()
+
+
+class DiaryStickerRequestSerializer(serializers.Serializer):
+    content = serializers.CharField()
+
+class DiaryStickerGetResponseSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    status = serializers.CharField()
+    message = serializers.CharField()
+    data = serializers.DictField(child=serializers.ListField(child=serializers.CharField()))
