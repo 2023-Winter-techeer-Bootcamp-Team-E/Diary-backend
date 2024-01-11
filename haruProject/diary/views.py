@@ -20,7 +20,8 @@ import uuid
 import time
 import requests
 
-from .swaggerserializer import DiaryGetRequestSerializer, DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer
+from .swaggerserializer import DiaryGetRequestSerializer, DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer, \
+    DiaryStickerRequestSerializer, DiaryStickerGetResponseSerializer
 
 
 # Create your views here.
@@ -144,18 +145,20 @@ class DiaryTextBoxManager(APIView):
 
 
 class DiaryStickerManager(APIView):
+    @swagger_auto_schema(request_body=DiaryStickerRequestSerializer,
+                         responses={201: DiaryStickerGetResponseSerializer})
     def post(self, request, format=None):
         start = time.time()
-        print(request.POST.get('_content'))
+        print(request.data.get('content'))
         try:
-            content = request.POST.get('_content')
+            content = request.data.get('content')
 
             # DiaryTextBox 모델에 데이터 저장
             # diary_text_box = DiaryTextBox.objects.create(content=content)
 
             # 일기 내용에서 상위 3개 키워드 추출
             top_keywords = extract_top_keywords(content)
-
+            print(top_keywords)
             # 상위 키워드로 DALL-E API 호출하여 스티커 이미지 생성
             sticker_image_urls = generate_sticker_images(top_keywords)
 
@@ -175,16 +178,16 @@ class DiaryStickerManager(APIView):
             }
             end = time.time()
             print(f"{end - start:.5f} sec")
-            return Response(response_data, status=status.HTTP_201_CREATED)
+            return Response(response_data, status=201)
         except NoCredentialsError:
-            return Response({"message": "AWS credentials not available."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"message": "AWS credentials not available."}, status=500)
         except Exception as e:
             response_data = {
                 'code': 'D001',
                 'status': '500',
                 'message': f'에러 발생: {str(e)}',
             }
-            return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(response_data, status=500)
 
     def upload_image_to_s3(self, image_data, keyword):
         try:
