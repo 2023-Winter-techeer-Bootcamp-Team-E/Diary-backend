@@ -20,9 +20,9 @@ services:
     build:
       context: nginx
     container_name: nginx
-    restart: unless-stopped
+    restart: unless-stopped #꺼지면 바로 키라는거
     ports:
-      - "80:80"
+      - "80:80" #리버스 프록시 ?
 #      - "443:443"
     volumes:
       - build_folder:/var/www/frontend
@@ -30,13 +30,13 @@ services:
 #      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
 #      - ./certbot/conf:/etc/letsencrypt:rw
 #      - ./certbot/www:/var/www/certbot:rw
-    depends_on:
-      - frontend
+    depends_on: #프론트엔드의 정적파일을enginx가 파일에 넣어서 사용함, 그래서 프론트엔드가 먼저 빌드가 되고 엔진이 실행되어야함.
+      - frontend #위와같은 이유로 종속성을 보장하는데 완전성을 보장하지는 않음, 백엔드는 디비가 안켜지면 서버가 뒤져버림
     expose:
       - '80'
 #      - '443'
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-#    networks:
+#    networks: #위에는 엔진엑스 커ㅔㄴ드 실행어라 넣어줌
 #      - app-tier
 
       #  mysqldb:
@@ -61,7 +61,7 @@ services:
     build:
       context: ../backend
     container_name: backend
-    command: >
+    command: > #쉘명령어 우리가 하듯이 하는거
       sh -c "python manage.py makemigrations &&
              python manage.py migrate &&
              daphne -b 0.0.0.0 -p 8000 config.asgi:application"
@@ -82,7 +82,7 @@ services:
 #
 #
 #
-#  certbot:
+#  certbot: #https 인증받는 과정을 자동으로 해줌
 #    image: certbot/certbot
 #    restart: unless-stopped
 #    volumes:
