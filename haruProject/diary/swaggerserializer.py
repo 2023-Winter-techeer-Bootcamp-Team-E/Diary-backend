@@ -26,6 +26,17 @@ class DiaryStickerGetSerializer(serializers.Serializer):
 class DiaryGetRequestSerializer(serializers.Serializer):
     diary_id = serializers.IntegerField()
 
+class SwaggerDiaryCreateRequestSerializer(serializers.Serializer):
+    member_id = serializers.IntegerField()
+    diary_date = serializers.CharField()
+    diary_bg_url = serializers.CharField()
+    static_bg_id = serializers.IntegerField()
+
+class SwaggerDiaryCreateResponseSerializer(serializers.Serializer):
+    diary_id = serializers.IntegerField()
+    sns_link = serializers.CharField()
+
+
 
 class DiaryGetResponseSerializer(serializers.Serializer):
     diary_id = serializers.IntegerField()
