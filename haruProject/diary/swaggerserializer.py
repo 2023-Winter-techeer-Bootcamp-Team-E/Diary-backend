@@ -48,6 +48,45 @@ class DiaryLinkGetResponseSerializer(serializers.Serializer):
     message = serializers.CharField()
     data = DiaryLinkResponseSerializer()
 
+'''
+class DiaryTextBoxPostRequestSerializer(serializers.Serializer):
+    content = serializers.CharField()
+    diary_id = serializers.IntegerField()
+
+
+class DiaryTextBoxPostResponseSerializer(serializers.Serializer):
+    textbox_id = serializers.IntegerField()
+'''
+
+class TextBoxPutRequestSerializer(serializers.Serializer):
+    writer = serializers.CharField()
+    xcoor = serializers.IntegerField()
+    ycoor = serializers.IntegerField()
+    height = serializers.IntegerField()
+    width = serializers.IntegerField()
+
+
+class StickerPutRequestSerializer(serializers.Serializer):
+    sticker_image_url = serializers.URLField()
+    xcoor = serializers.IntegerField()
+    ycoor = serializers.IntegerField()
+    height = serializers.IntegerField()
+    width = serializers.IntegerField()
+    rotate = serializers.IntegerField()
+
+
+class DiaryTextBoxPutRequestSerializer(serializers.Serializer):
+    diary_id = serializers.IntegerField()
+    day = serializers.CharField()
+    textboxs = TextBoxPutRequestSerializer()
+    stickers = StickerPutRequestSerializer()
+
+
+class DiaryTextBoxPutResponseSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    status = serializers.CharField()
+    message = serializers.CharField()
+    
 
 class DiaryStickerRequestSerializer(serializers.Serializer):
     content = serializers.CharField()
@@ -57,3 +96,4 @@ class DiaryStickerGetResponseSerializer(serializers.Serializer):
     status = serializers.CharField()
     message = serializers.CharField()
     data = serializers.DictField(child=serializers.ListField(child=serializers.CharField()))
+

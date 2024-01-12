@@ -1,5 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -21,7 +22,8 @@ import time
 import requests
 
 from .swaggerserializer import DiaryGetRequestSerializer, DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer, \
-    DiaryStickerRequestSerializer, DiaryStickerGetResponseSerializer
+    DiaryTextBoxPutRequestSerializer, DiaryTextBoxPutResponseSerializer,DiaryStickerRequestSerializer, DiaryStickerGetResponseSerializer
+
 
 
 # Create your views here.
@@ -37,6 +39,8 @@ class Diaries(APIView):
             return Response(status=status.HTTP_200_OK, data=serialized_diary)
         except ObjectDoesNotExist:
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
+    #만약 쿠키가 있다면 캘린더 아이디만 받게 ??
 
     # 일기장 생성
     @staticmethod
@@ -88,7 +92,7 @@ class Diaries(APIView):
 
 # 일기장 링크공유
 class DiaryManager(APIView):
-    @swagger_auto_schema(responses={200:DiaryLinkGetResponseSerializer})
+    @swagger_auto_schema(responses={200: DiaryLinkGetResponseSerializer})
     def get(self, request, diary_id):
 
         found_diary = Diary.objects.get(diary_id=diary_id)
@@ -101,14 +105,20 @@ class DiaryManager(APIView):
 
 
 class DiaryTextBoxManager(APIView):
-    @staticmethod
-    def put(request, diary_id):
+    @swagger_auto_schema(
+        request_body=DiaryTextBoxPutRequestSerializer,  # YourSerializer는 사용자 정의 시리얼라이저입니다.
+        responses={200: 'DiaryTextBoxPutResponseSerializer'},
+        operation_description="This is your PUT method description."
+    )
+    def put(self, request):
+        diary_id = request.data.get('diary_id')
         if diary_id is None:
             return Response({"error": "diary does not exist"}, status=status.HTTP_400_BAD_REQUEST)
         if request.data is None:
             return Response({"error": "diary data does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+
             diary_instance = get_object_or_404(Diary, diary_id=diary_id)
         except ObjectDoesNotExist:
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
@@ -124,24 +134,25 @@ class DiaryTextBoxManager(APIView):
                 sticker_serializer = DiaryStickerCreateSerializer(data=sticker_data)
                 if sticker_serializer.is_valid():
                     sticker_serializer.save(diary=diary_instance)
-            return Response(status=status.HTTP_200_OK)
-        except ValidationError as e:
-            return Response(status=status.HTTP_200_OK)
+            return Response({'code': 'D001', 'status': '201', 'message': '일기장 저장 성공!'}, status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
-    # 텍스트 박스 저장, text만 받아서 텍스트 박스 생성해주고, 텍스트박스 아이디 값 반환, 내용->comprehend 전달
-    # notnull이면 안되므로 초기 좌표값,너비,등등 미리 저장 후 추후 최종저장
-    # null =true 바꾸면 안될거 같아서
-    @staticmethod
-    def post(request):
-        diary_instance = get_object_or_404(Diary, diary_id=request.data.get('diary_id'))
-        diarytextbox_serializer = DiaryTextBoxCreateSerializer(data=request.data)
+
+    '''
+    @swagger_auto_schema(query_serializer=DiaryTextBoxPostRequestSerializer,responses={200:DiaryTextBoxPostResponseSerializer})
+    def post(self, request):
+        diary_instance = get_object_or_404(Diary, diary_id=request.query_params.get('diary_id'))
+        content = request.query_params.get('content')
+        diarytextbox_serializer = DiaryTextBoxCreateSerializer(data={'content': content})
+
         if diarytextbox_serializer.is_valid():
             diarytextbox_pk = diarytextbox_serializer.save(diary=diary_instance)
-            return Response({'data': diarytextbox_pk.pk}, status=status.HTTP_201_CREATED)
+            return Response({'textbox_id': diarytextbox_pk.pk}, status=status.HTTP_201_CREATED)
 
-        else:
-            print(diarytextbox_serializer.errors)
+        else: 
             return Response(status=status.HTTP_400_BAD_REQUEST)
+    '''
 
 
 class DiaryStickerManager(APIView):
