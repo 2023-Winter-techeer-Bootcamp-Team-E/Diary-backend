@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers, viewsets
 from .models import Member
 from django.db import IntegrityError
 
@@ -30,6 +30,9 @@ class MemberSerializer(serializers.Serializer):
                 "message": "이미 존재하는 로그인 ID입니다."
             }
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Member
 
 class SignSerializer(serializers.Serializer):
     login_id = serializers.CharField()
@@ -52,4 +55,10 @@ class SignSerializer(serializers.Serializer):
         # 여기서 필요한 추가 검증 로직을 수행할 수 있습니다.
 
         # 최종적으로 검증된 데이터 반환
+        validated_data['member_id'] = member.member_id
+        validated_data['nickname'] = member.nickname
         return validated_data
+
+class YourModelViewSet(viewsets.ModelViewSet):
+    queryset = Member.objects.all()
+    serializer_class = UserSerializer

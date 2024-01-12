@@ -4,14 +4,12 @@ from .models import Diary, DiaryTextBox, DiarySticker
 
 
 class DiaryTextBoxSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = DiaryTextBox
         fields = ['textbox_id', 'writer', 'content', 'xcoor', 'ycoor', 'width', 'height', 'rotate']
 
 
 class DiaryStickerSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = DiarySticker
         fields = ['sticker_id', 'sticker_image_url', 'xcoor', 'ycoor', 'width', 'height', 'rotate']
@@ -42,17 +40,16 @@ class DiarySnsLinkSerializer(serializers.ModelSerializer):
 class DiaryCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Diary
-        fields = ['title', 'diary_date', 'diary_day', 'sns_link', 'diary_bg_url']
+        fields = ['diary_id', 'sns_link', 'diary_bg_url']
 
     def create(self, validated_data):
         return Diary.objects.create(**validated_data)
 
 
 class DiaryTextBoxCreateSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = DiaryTextBox
-        fields = ['writer', 'content', 'xcoor', 'ycoor', 'width', 'height', 'rotate']
+        fields = ['content']
 
     def create(self, validated_data):
         return DiaryTextBox.objects.create(**validated_data)
