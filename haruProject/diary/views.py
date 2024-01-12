@@ -8,6 +8,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.exceptions import ValidationError
 
 from member.models import Member
+from static.models import StaticBgImage
 from .models import Diary, DiaryTextBox
 from .serializers import (DiaryDetailSerializer, DiaryListSerializer, DiarySnsLinkSerializer,
                           DiaryCreateSerializer, DiaryTextBoxCreateSerializer,
@@ -22,8 +23,8 @@ import time
 import requests
 
 from .swaggerserializer import DiaryGetRequestSerializer, DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer, \
-    DiaryTextBoxPutRequestSerializer, DiaryTextBoxPutResponseSerializer,DiaryStickerRequestSerializer, DiaryStickerGetResponseSerializer
-
+    DiaryTextBoxPutRequestSerializer, DiaryTextBoxPutResponseSerializer, DiaryStickerRequestSerializer, \
+    DiaryStickerGetResponseSerializer, SwaggerDiaryCreateRequestSerializer, SwaggerDiaryCreateResponseSerializer
 
 
 # Create your views here.
@@ -42,8 +43,9 @@ class Diaries(APIView):
 
     #만약 쿠키가 있다면 캘린더 아이디만 받게 ??
 
-    # 일기장 생성
+    # 일기장 생성SwaggerDiaryCreateRequestSerializer
     @staticmethod
+    @swagger_auto_schema(request_body=SwaggerDiaryCreateRequestSerializer, responses={200: SwaggerDiaryCreateResponseSerializer})
     def post(request):
         # 쿠키로 받아서 쓸거임 claendar id, member-id
         calendar_id = request.data.get('calendar_id')
@@ -57,19 +59,23 @@ class Diaries(APIView):
         if calendar_id is None:
             member_instance = get_object_or_404(Member, member_id=member_id)  # 멤버 인스턴스 받아오기
             calendar_serializer = HarucalendarCreateSerializer(data={'year_month_day': year_month_day})  # 캘린더 생성
+            static_bg_id = request.data.get('static_id')
             if calendar_serializer.is_valid():
-                calendar_serializer.save(member_id=member_instance)  # 캘린더 생성 완료
+                calendar_serializer = calendar_serializer.save(member=member_instance)
+
+                # 캘린더 생성 완료
                 # 캘린더 생성 후 일기장 저장.
-                new_calendar_pk = calendar_serializer.instance.pk
-                new_calendar_instance = get_object_or_404(Harucalendar, calendar=new_calendar_pk)
+                # new_calendar_pk = calendar_serializer.instance.pk
+                # new_calendar_instance = get_object_or_404(Harucalendar, calendar=new_calendar_pk)
+                # found_static = get_object_or_404(StaticBgImage, static_id=request.data.get('static_bg_id'))
+                request.data['diary_bg_url'] = "found_static_url"
+                request.data['sns_link'] = "nazoongeh"
                 diary_serializer = DiaryCreateSerializer(data=request.data)
                 if diary_serializer.is_valid():
-                    diary_serializer.save(calendar=new_calendar_instance)
+                    diary_serializer.save(calendar=calendar_serializer)
                     return Response(diary_serializer.data, status=status.HTTP_200_OK)
                 else:
                     return Response(status=status.HTTP_400_BAD_REQUEST)
-
-
             else:
                 return Response({'errors': '데이터 값이 유효하지 않습니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
