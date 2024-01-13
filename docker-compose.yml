@@ -2,6 +2,27 @@ version: "3.8"
 
 
 services:
+
+  db:
+    image: mysql:8.0
+    container_name: mysqldb
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: "haru"
+      MYSQL_ROOT_PASSWORD: "12345678"
+    volumes:
+      - db_data:/var/lib/mysql
+
+#    healthcheck:
+#      test: [ "CMD", "mysql", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}", "-e", "SELECT 1" ]
+#      timeout: 20s
+#      retries: 10
+    networks:
+      - haru
+
+    # 가상 네트워크 연결
+
   frontend: #프론트 엔드 서비스를 만듬
     build:
       context: ../frontend #프론트 엔드 소스코드는 이 경로에 있다.
@@ -40,26 +61,8 @@ services:
       - haru
     #      - '443'
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-      #    networks:
-      #      - app-tier
-
-      #  mysqldb:
-      #    image: mysql:8.0
-      #    container_name: mysqldb
-      #    env_file:
-      #      - "./backend/db/.env"
-      #    ports:
-      #      - "3306:3306"
-      #    platform: linux/amd64
-    #    volumes:
-    # - ./elk/logs/mysql_data:/var/var/log
-    #      - ./backend/db/init/:/docker-entrypoint-initdb.d/
-    # - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-    # healthcheck:
-    #   test: ["CMD", "mysqladmin", "ping", "-h", "mysqldb"]
-    #   timeout: 20s
-    #   retries: 10
-    # command: ["--general-log", "--general-log-file=/var/log/mysql.log"]
+    networks:
+      - haru
 
   backend:
     build:
@@ -84,13 +87,11 @@ services:
       #    networks:
     restart: always
     tty: true
+    depends_on:
+      - db
     networks:
       - haru
-  #    depends_on:
-  #      - mysqldb
 
-  #
-  #
   #
   #  certbot:
   #    image: certbot/certbot
@@ -150,10 +151,15 @@ services:
     restart: always
     networks:
       - haru
+      
 
 networks:
   haru:
     driver: bridge
 
 volumes:
-  build_folder: { }
+   build_folder: {}
+   db_data: {}
+networks:
+  haru:
+    driver: bridge
