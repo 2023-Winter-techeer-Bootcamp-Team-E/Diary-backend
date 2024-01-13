@@ -16,3 +16,4 @@ requests==2.31.0
 rembg==2.0.53
 channels-redis==4.1.0
 whitenoise==6.6.0
+celery==5.3.6

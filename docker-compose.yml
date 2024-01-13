@@ -15,40 +15,44 @@ services:
       - ./frontend/node_modules:/frontend/node_modules
     image: run
     tty: true
+    networks:
+      - haru
 
   nginx:
     build:
       context: nginx
     container_name: nginx
-    restart: unless-stopped #꺼지면 바로 키라는거
+    restart: unless-stopped
     ports:
-      - "80:80" #리버스 프록시 ?
-#      - "443:443"
+      - "80:80"
+    #      - "443:443"
     volumes:
       - build_folder:/var/www/frontend
 
-#      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-#      - ./certbot/conf:/etc/letsencrypt:rw
-#      - ./certbot/www:/var/www/certbot:rw
-    depends_on: #프론트엔드의 정적파일을enginx가 파일에 넣어서 사용함, 그래서 프론트엔드가 먼저 빌드가 되고 엔진이 실행되어야함.
-      - frontend #위와같은 이유로 종속성을 보장하는데 완전성을 보장하지는 않음, 백엔드는 디비가 안켜지면 서버가 뒤져버림
+    #      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    #      - ./certbot/conf:/etc/letsencrypt:rw
+    #      - ./certbot/www:/var/www/certbot:rw
+    depends_on:
+      - frontend
     expose:
       - '80'
-#      - '443'
+    networks:
+      - haru
+    #      - '443'
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-#    networks: #위에는 엔진엑스 커ㅔㄴ드 실행어라 넣어줌
-#      - app-tier
+      #    networks:
+      #      - app-tier
 
       #  mysqldb:
-#    image: mysql:8.0
-#    container_name: mysqldb
-#    env_file:
-#      - "./backend/db/.env"
-#    ports:
-#      - "3306:3306"
+      #    image: mysql:8.0
+      #    container_name: mysqldb
+      #    env_file:
+      #      - "./backend/db/.env"
+      #    ports:
+      #      - "3306:3306"
       #    platform: linux/amd64
-      #    volumes:
-      # - ./elk/logs/mysql_data:/var/var/log
+    #    volumes:
+    # - ./elk/logs/mysql_data:/var/var/log
     #      - ./backend/db/init/:/docker-entrypoint-initdb.d/
     # - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     # healthcheck:
@@ -61,7 +65,7 @@ services:
     build:
       context: ../backend
     container_name: backend
-    command: > #쉘명령어 우리가 하듯이 하는거
+    command: >
       sh -c "python manage.py makemigrations &&
             python manage.py makemigrations member &&
             python manage.py makemigrations harucalendar &&
@@ -71,30 +75,85 @@ services:
             daphne -b 0.0.0.0 -p 8000 config.asgi:application"
     ports:
       - "8000:8000"
-#    volumes:
-##      - static_volume:/backend/staticfiles
-##      - media_volume:/backend/mediafiles
-#      - build_folder:/var/www/frontend
+    #    volumes:
+    ##      - static_volume:/backend/staticfiles
+    ##      - media_volume:/backend/mediafiles
+    #      - build_folder:/var/www/frontend
     expose:
       - "8000"
       #    networks:
     restart: always
     tty: true
-#    depends_on:
-#      - mysqldb
+    networks:
+      - haru
+  #    depends_on:
+  #      - mysqldb
 
-#
-#
-#
-#  certbot: #https 인증받는 과정을 자동으로 해줌
-#    image: certbot/certbot
-#    restart: unless-stopped
-#    volumes:
-#      - ./certbot/conf:/etc/letsencrypt:rw
-#      - ./certbot/www:/var/www/certbot:rw
-#    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-#    depends_on:
-#      - nginx
+  #
+  #
+  #
+  #  certbot:
+  #    image: certbot/certbot
+  #    restart: unless-stopped
+  #    volumes:
+  #      - ./certbot/conf:/etc/letsencrypt:rw
+  #      - ./certbot/www:/var/www/certbot:rw
+  #    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+  #    depends_on:
+  #      - nginx
+
+  celery:
+    container_name: celery
+#    env_file:
+#      - ./settings/.env
+    command: sh -c "celery -A celery worker --loglevel=info"
+    build:
+      #context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+    depends_on:
+      - rabbitmq
+      - backend
+    restart: always
+    tty: true
+    networks:
+      - haru
+
+  rabbitmq:
+    image: "rabbitmq:3.9-management"
+    container_name: rabbitmq
+    # command: rabbitmq-server
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASSWORD=guest
+    ports:
+      # Expose the port for the worker to add/get tasks
+      - 5672:5672
+      # OPTIONAL: Expose the GUI port
+      - 15672:15672
+    depends_on:
+      - backend
+    restart: always   # restart: unless-stopped??
+    tty: true
+    expose:
+      - 5672
+    networks:
+      - haru
+
+  redis:
+    image: "redis:latest"
+    container_name: redis
+    ports:
+      - "6379:6379"  # Redis 서버에 접근하기 위한 포트
+    restart: always
+    networks:
+      - haru
+
+networks:
+  haru:
+    driver: bridge
 
 volumes:
-   build_folder: {}
+  build_folder: { }
