@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
 from member.models import Member
 from static.models import StaticBgImage
@@ -29,10 +30,16 @@ from .swaggerserializer import DiaryGetRequestSerializer, DiaryGetResponseSerial
 
 # Create your views here.
 
-class Diaries(APIView):
+class DiariesGet(APIView):
     # 일기장 조회
-    @swagger_auto_schema(query_serializer=DiaryGetRequestSerializer, responses={200: DiaryGetResponseSerializer})
+
+    @swagger_auto_schema(
+        operation_description="diary_id를 입력하면 관련된 일기,텍스트박스,스티커 출력",
+        operation_summary="일기장 조회",
+        responses= {200: DiaryGetResponseSerializer}
+    )
     def get(self, request, diary_id):
+
         found_diary = get_object_or_404(Diary, diary_id=diary_id)
 
         try:
@@ -41,64 +48,57 @@ class Diaries(APIView):
         except ObjectDoesNotExist:
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
-    #만약 쿠키가 있다면 캘린더 아이디만 받게 ??
 
-    # 일기장 생성SwaggerDiaryCreateRequestSerializer
-    @staticmethod
-    @swagger_auto_schema(request_body=SwaggerDiaryCreateRequestSerializer, responses={200: SwaggerDiaryCreateResponseSerializer})
-    def post(request):
-        # 쿠키로 받아서 쓸거임 claendar id, member-id
+class DiariesPost(APIView):
+    @swagger_auto_schema(
+        operation_description="calendar_id가 Null값 일떄 calendar생성 후 diary내용 저장, calendar_id가 포함이 되어있으면 diary바로 저장 ",
+        operation_summary="일기 저장",
+        request_body=SwaggerDiaryCreateRequestSerializer, responses={200: SwaggerDiaryCreateResponseSerializer})
+    def post(self, request):
         calendar_id = request.data.get('calendar_id')
         member_id = request.data.get('member_id')
-        # 쿠키 세션을 받아와서 켈린더,맴버 아이디를 찾아온다음,
-        # 날짜에서 연월만 추출
+        year_month_day = request.data.get('diary_date')
 
-        year_month_day = request.data.get('diary_date')  # 이건 받아서 쓸거임
-
-        # 캘린더가 없을때
         if calendar_id is None:
-            member_instance = get_object_or_404(Member, member_id=member_id)  # 멤버 인스턴스 받아오기
-            calendar_serializer = HarucalendarCreateSerializer(data={'year_month_day': year_month_day})  # 캘린더 생성
+            member_instance = get_object_or_404(Member, member_id=member_id)
+            calendar_serializer = HarucalendarCreateSerializer(data={'year_month_day': year_month_day})
             static_bg_id = request.data.get('static_id')
-            if calendar_serializer.is_valid():
-                calendar_serializer = calendar_serializer.save(member=member_instance)
 
-                # 캘린더 생성 완료
-                # 캘린더 생성 후 일기장 저장.
-                # new_calendar_pk = calendar_serializer.instance.pk
-                # new_calendar_instance = get_object_or_404(Harucalendar, calendar=new_calendar_pk)
-                # found_static = get_object_or_404(StaticBgImage, static_id=request.data.get('static_bg_id'))
+            if calendar_serializer.is_valid():
+                calendar_instance = calendar_serializer.save(member=member_instance)
                 request.data['diary_bg_url'] = "found_static_url"
                 request.data['sns_link'] = "nazoongeh"
                 diary_serializer = DiaryCreateSerializer(data=request.data)
+
                 if diary_serializer.is_valid():
-                    diary_serializer.save(calendar=calendar_serializer)
+                    diary_serializer.save(calendar=calendar_instance)
                     return Response(diary_serializer.data, status=status.HTTP_200_OK)
                 else:
-                    return Response(status=status.HTTP_400_BAD_REQUEST)
+                    return Response({'errors': 'Invalid data for diary'}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({'errors': '데이터 값이 유효하지 않습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-
-
-        # 캘린더가 있을떄(diary_id가 있을떄)
+                return Response({'errors': 'Invalid data for calendar'}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            calendar_instance = get_object_or_404(Harucalendar, calendar=request.data.get('calendar_id'))
-            calendar_duplication = Harucalendar.objects.filter(year_month_day=request.data.get('diary_date'))
+            calendar_instance = get_object_or_404(Harucalendar, calendar_id=calendar_id)
+            calendar_duplication = Harucalendar.objects.filter(year_month_day=year_month_day)
+
             if calendar_duplication:
-                return Response({'error': '해당일에 이미 일기가 있습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': 'Diary already exists for the specified date'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
             diary_serializer = DiaryCreateSerializer(data=request.data)
             if diary_serializer.is_valid():
                 diary_serializer.save(calendar=calendar_instance)
-                return Response(status=status.HTTP_200_OK)
+                return Response(diary_serializer.data, status=status.HTTP_200_OK)
             else:
-                return Response(diary_serializer.data, status=status.HTTP_400_BAD_REQUEST)
+                return Response(diary_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # 일기장 최종 저장
 
 
 # 일기장 링크공유
 class DiaryManager(APIView):
-    @swagger_auto_schema(responses={200: DiaryLinkGetResponseSerializer})
+    @swagger_auto_schema(
+        responses={200: DiaryLinkGetResponseSerializer})
     def get(self, request, diary_id):
 
         found_diary = Diary.objects.get(diary_id=diary_id)
@@ -111,11 +111,12 @@ class DiaryManager(APIView):
 
 
 class DiaryTextBoxManager(APIView):
-    @swagger_auto_schema(
-        request_body=DiaryTextBoxPutRequestSerializer,  # YourSerializer는 사용자 정의 시리얼라이저입니다.
-        responses={200: 'DiaryTextBoxPutResponseSerializer'},
-        operation_description="This is your PUT method description."
-    )
+    @swagger_auto_schema(operation_description="일기 최종 저장",
+                         operation_summary="기존 만들어진 일기에 일기 텍스트 박스 및 스티커 정보 저장",
+                         request_body=DiaryTextBoxPutRequestSerializer,  # YourSerializer는 사용자 정의 시리얼라이저입니다.
+                         responses={200: 'DiaryTextBoxPutResponseSerializer'},
+
+                         )
     def put(self, request):
         diary_id = request.data.get('diary_id')
         if diary_id is None:
@@ -143,7 +144,6 @@ class DiaryTextBoxManager(APIView):
             return Response({'code': 'D001', 'status': '201', 'message': '일기장 저장 성공!'}, status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
-
 
     '''
     @swagger_auto_schema(query_serializer=DiaryTextBoxPostRequestSerializer,responses={200:DiaryTextBoxPostResponseSerializer})

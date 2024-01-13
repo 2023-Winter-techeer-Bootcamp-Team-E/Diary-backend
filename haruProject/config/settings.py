@@ -64,7 +64,8 @@ INSTALLED_APPS = [
     'drf_yasg',
     'storages',
     'static',
-    'whitenoise'
+    'whitenoise',
+
 ]
 
 MIDDLEWARE = [
@@ -77,6 +78,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     'whitenoise.middleware.WhiteNoiseMiddleware',
+
 
 
 ]
