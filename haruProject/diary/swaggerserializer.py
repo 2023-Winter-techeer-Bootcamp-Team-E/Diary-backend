@@ -23,8 +23,7 @@ class DiaryStickerGetSerializer(serializers.Serializer):
     rotate = serializers.IntegerField()
 
 
-class DiaryGetRequestSerializer(serializers.Serializer):
-    diary_id = serializers.IntegerField()
+
 
 class SwaggerDiaryCreateRequestSerializer(serializers.Serializer):
     member_id = serializers.IntegerField()
@@ -32,10 +31,10 @@ class SwaggerDiaryCreateRequestSerializer(serializers.Serializer):
     diary_bg_url = serializers.CharField()
     static_bg_id = serializers.IntegerField()
 
+
 class SwaggerDiaryCreateResponseSerializer(serializers.Serializer):
     diary_id = serializers.IntegerField()
     sns_link = serializers.CharField()
-
 
 
 class DiaryGetResponseSerializer(serializers.Serializer):
@@ -43,8 +42,11 @@ class DiaryGetResponseSerializer(serializers.Serializer):
     diary_date = serializers.CharField()
     diary_bg_url = serializers.CharField()
     is_expiry = serializers.BooleanField()
-    diaryTextBoxs = DiaryTextBoxGetSerializer(many=True)
-    diaryStickers = DiaryStickerGetSerializer(many=True)
+    diaryTextBoxs = DiaryTextBoxGetSerializer()
+    diaryStickers = DiaryStickerGetSerializer()
+
+class DiaryGetRequestSerializer(serializers.Serializer):
+        diary_id = serializers.IntegerField(required=True)
 
 
 class DiaryLinkResponseSerializer(serializers.Serializer):
@@ -59,7 +61,7 @@ class DiaryLinkGetResponseSerializer(serializers.Serializer):
     message = serializers.CharField()
     data = DiaryLinkResponseSerializer()
 
-'''
+
 class DiaryTextBoxPostRequestSerializer(serializers.Serializer):
     content = serializers.CharField()
     diary_id = serializers.IntegerField()
@@ -67,7 +69,7 @@ class DiaryTextBoxPostRequestSerializer(serializers.Serializer):
 
 class DiaryTextBoxPostResponseSerializer(serializers.Serializer):
     textbox_id = serializers.IntegerField()
-'''
+
 
 class TextBoxPutRequestSerializer(serializers.Serializer):
     writer = serializers.CharField()
@@ -97,14 +99,14 @@ class DiaryTextBoxPutResponseSerializer(serializers.Serializer):
     code = serializers.CharField()
     status = serializers.CharField()
     message = serializers.CharField()
-    
+
 
 class DiaryStickerRequestSerializer(serializers.Serializer):
     content = serializers.CharField()
+
 
 class DiaryStickerGetResponseSerializer(serializers.Serializer):
     code = serializers.CharField()
     status = serializers.CharField()
     message = serializers.CharField()
     data = serializers.DictField(child=serializers.ListField(child=serializers.CharField()))
-
