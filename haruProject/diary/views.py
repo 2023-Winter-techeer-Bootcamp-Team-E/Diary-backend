@@ -1,19 +1,15 @@
 from django.core.exceptions import ObjectDoesNotExist
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.decorators import api_view
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from member.models import Member
-from static.models import StaticBgImage
-from .models import Diary, DiaryTextBox
-from .serializers import (DiaryDetailSerializer, DiaryListSerializer, DiarySnsLinkSerializer,
+from .models import Diary
+from .serializers import (DiaryDetailSerializer, DiarySnsLinkSerializer,
                           DiaryCreateSerializer, DiaryTextBoxCreateSerializer,
-                          DiaryStickerCreateSerializer, DiaryTextBoxSerializer, DiaryUpdateSerializer)
+                          DiaryStickerCreateSerializer, DiaryUpdateSerializer)
 from harucalendar.models import Harucalendar
 from harucalendar.serializer import HarucalendarCreateSerializer
 from .utils import extract_top_keywords, generate_sticker_images
@@ -21,16 +17,15 @@ from botocore.exceptions import NoCredentialsError
 import boto3
 import uuid
 import time
-import requests
 
-from .swaggerserializer import DiaryGetRequestSerializer, DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer, \
-    DiaryTextBoxPutRequestSerializer, DiaryTextBoxPutResponseSerializer, DiaryStickerRequestSerializer, \
+from .swaggerserializer import DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer, \
+    DiaryTextBoxPutRequestSerializer, DiaryStickerRequestSerializer, \
     DiaryStickerGetResponseSerializer, SwaggerDiaryCreateRequestSerializer, SwaggerDiaryCreateResponseSerializer
 
 
 # Create your views here.
 
-class DiariesGet(APIView):
+class Diaries(APIView):
     # 일기장 조회
 
     @swagger_auto_schema(
@@ -48,10 +43,6 @@ class DiariesGet(APIView):
         except ObjectDoesNotExist:
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
-
-
-class DiariesPost(APIView):
-    # 일기장 생성
     @staticmethod
     @swagger_auto_schema(request_body=SwaggerDiaryCreateRequestSerializer, responses={200: SwaggerDiaryCreateResponseSerializer})
     def post(request):
@@ -151,7 +142,6 @@ def request_manager(request):
         #         return Response(diary_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
     # 일기장 최종 저장
-
 
 # 일기장 링크공유
 class DiaryManager(APIView):
