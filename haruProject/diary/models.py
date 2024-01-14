@@ -6,11 +6,10 @@ from harucalendar.models import Harucalendar
 
 class Diary(models.Model):
     diary_id = models.AutoField(primary_key=True)
-    calendar = models.ForeignKey(Harucalendar, on_delete=models.CASCADE)
-    title = models.CharField(max_length=100)
+    calendar = models.ForeignKey(Harucalendar, related_name='calendar', on_delete=models.CASCADE)
     diary_date = models.CharField(max_length=10)
-    diary_day = models.CharField(max_length=10)
-    sns_link = models.CharField(max_length=500)
+    diary_day = models.CharField(max_length=10, blank=True)
+    sns_link = models.CharField(max_length=500, blank=True)
     diary_bg_url = models.CharField(max_length=500)
     is_expiry = models.BooleanField(default=False, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
