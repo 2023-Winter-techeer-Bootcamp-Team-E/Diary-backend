@@ -27,6 +27,8 @@ class GuestCreateView(APIView):
         serializer = GuestCreateSerializer(data=guest_data)
         if serializer.is_valid():
             guest = serializer.save()
+            request.session['guest_id'] = guest.guest_id
+
             response_data = {
             "data": {"guest_id": guest.guest_id},
             "code": "G001",

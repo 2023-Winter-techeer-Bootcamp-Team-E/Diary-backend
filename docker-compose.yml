@@ -2,6 +2,27 @@ version: "3.8"
 
 
 services:
+
+  db:
+    image: mysql:8.0
+    container_name: mysqldb
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: "haru"
+      MYSQL_ROOT_PASSWORD: "12345678"
+    volumes:
+      - db_data:/var/lib/mysql
+
+#    healthcheck:
+#      test: [ "CMD", "mysql", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}", "-e", "SELECT 1" ]
+#      timeout: 20s
+#      retries: 10
+    networks:
+      - haru
+
+    # 가상 네트워크 연결
+
   frontend: #프론트 엔드 서비스를 만듬
     build:
       context: ../frontend #프론트 엔드 소스코드는 이 경로에 있다.
@@ -15,6 +36,8 @@ services:
       - ./frontend/node_modules:/frontend/node_modules
     image: run
     tty: true
+    networks:
+      - haru
 
   nginx:
     build:
@@ -36,7 +59,10 @@ services:
       - '80'
 #      - '443'
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-#    networks: #위에는 엔진엑스 커ㅔㄴ드 실행어라 넣어줌
+    networks:
+      - haru
+
+      #    networks: #위에는 엔진엑스 커ㅔㄴ드 실행어라 넣어줌
 #      - app-tier
 
       #  mysqldb:
@@ -80,6 +106,11 @@ services:
       #    networks:
     restart: always
     tty: true
+    depends_on:
+      - db
+    networks:
+      - haru
+
 #    depends_on:
 #      - mysqldb
 
@@ -98,3 +129,7 @@ services:
 
 volumes:
    build_folder: {}
+   db_data: {}
+networks:
+  haru:
+    driver: bridge
