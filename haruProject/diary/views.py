@@ -13,7 +13,7 @@ from static.models import StaticBgImage
 from .models import Diary, DiaryTextBox
 from .serializers import (DiaryDetailSerializer, DiaryListSerializer, DiarySnsLinkSerializer,
                           DiaryCreateSerializer, DiaryTextBoxCreateSerializer,
-                          DiaryStickerCreateSerializer, DiaryTextBoxSerializer)
+                          DiaryStickerCreateSerializer, DiaryTextBoxSerializer, DiaryUpdateSerializer)
 from harucalendar.models import Harucalendar
 from harucalendar.serializer import HarucalendarCreateSerializer
 from .utils import extract_top_keywords, generate_sticker_images
@@ -49,48 +49,106 @@ class DiariesGet(APIView):
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
 
+
 class DiariesPost(APIView):
-    @swagger_auto_schema(
-        operation_description="calendar_id가 Null값 일떄 calendar생성 후 diary내용 저장, calendar_id가 포함이 되어있으면 diary바로 저장 ",
-        operation_summary="일기 저장",
-        request_body=SwaggerDiaryCreateRequestSerializer, responses={200: SwaggerDiaryCreateResponseSerializer})
-    def post(self, request):
-        calendar_id = request.data.get('calendar_id')
-        member_id = request.data.get('member_id')
-        year_month_day = request.data.get('diary_date')
+    # 일기장 생성
+    @staticmethod
+    @swagger_auto_schema(request_body=SwaggerDiaryCreateRequestSerializer, responses={200: SwaggerDiaryCreateResponseSerializer})
+    def post(request):
+        # 쿠키로 받아서 쓸거임 claendar id, member-id
+        calendar_id = request.session.get('calendar_id')
+        member_id = request.session.get('member_id')
+
+        if member_id is None:
+            return Response({'error': '로그인이 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        diary_date = request.data.get('diary_date')
 
         if calendar_id is None:
-            member_instance = get_object_or_404(Member, member_id=member_id)
+            member_instance = get_object_or_404(Member, member_id=member_id)  # 멤버 인스턴스 받아오기)
+            year_month_day = diary_date[:7]
             calendar_serializer = HarucalendarCreateSerializer(data={'year_month_day': year_month_day})
-            static_bg_id = request.data.get('static_id')
-
             if calendar_serializer.is_valid():
-                calendar_instance = calendar_serializer.save(member=member_instance)
-                request.data['diary_bg_url'] = "found_static_url"
-                request.data['sns_link'] = "nazoongeh"
-                diary_serializer = DiaryCreateSerializer(data=request.data)
+                calendar_instance = calendar_serializer.save(member=member_instance) #캘린더 인스턴스 확인필요
+                calendar_id = calendar_instance.calendar_id
+                request.session['calendar_id'] = calendar_id
 
-                if diary_serializer.is_valid():
-                    diary_serializer.save(calendar=calendar_instance)
-                    return Response(diary_serializer.data, status=status.HTTP_200_OK)
-                else:
-                    return Response({'errors': 'Invalid data for diary'}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({'errors': 'Invalid data for calendar'}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            calendar_instance = get_object_or_404(Harucalendar, calendar_id=calendar_id)
-            calendar_duplication = Harucalendar.objects.filter(year_month_day=year_month_day)
+                return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': '멤버와 캘린더 값이 유효하지 않습니다.'})
+            # 'diary_bg_url'에 원하는 값 설정
+            diary_data = {'diary_bg_url': "found_static_url", 'diary_date': diary_date}
 
-            if calendar_duplication:
-                return Response({'error': 'Diary already exists for the specified date'},
-                                status=status.HTTP_400_BAD_REQUEST)
-
-            diary_serializer = DiaryCreateSerializer(data=request.data)
+            diary_serializer = DiaryCreateSerializer(data=diary_data)
             if diary_serializer.is_valid():
-                diary_serializer.save(calendar=calendar_instance)
-                return Response(diary_serializer.data, status=status.HTTP_200_OK)
+                diary_instance = diary_serializer.save(calendar=calendar_instance)
+                data = {"sns_link": f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"}
+                diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=data)
+                if diary_update_serializer.is_valid():
+                    diary_update_serializer.save()
+                    return Response(diary_update_serializer.data, status=status.HTTP_200_OK)
+                else:
+                    return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'snsLink가 유효하지 않습니다.'})
+
+        if calendar_id is not None:
+            diary_exist = Diary.objects.filter(calendar=calendar_id, diary_date=diary_date).exists()
+            if diary_exist:
+                return Response({'error': '해당 일에 이미 일기가 있습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+            diary_data = {'diary_bg_url': "found_static_url", 'diary_date': diary_date}
+            diary_serializer = DiaryCreateSerializer(data=diary_data)
+            if diary_serializer.is_valid():
+                diary_instance = diary_serializer.save(calendar_id=calendar_id)
+                data = {"sns_link": f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"}
+                diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=data)
+                if diary_update_serializer.is_valid():
+                    diary_update_serializer.save()
+                    return Response(diary_update_serializer.data, status=status.HTTP_200_OK)
+                else:
+                    return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'snsLink가 유효하지 않습니다.'})
             else:
-                return Response(diary_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': '일기 생성 데이터가 유효하지 않습니다..'})
+
+
+def request_manager(request):
+    diary_bg_id = request.data.delete('diary_bg_id')
+    ### 일기장 배경 조회해오기 ###
+    request.data['diary_bg_url'] = "found_static_url"
+    return request
+
+
+            # if diary_instance is None:
+            #     print('diary_instance is None')
+
+                # 캘린더 생성 완료
+                # 캘린더 생성 후 일기장 저장.
+        #
+        #         # found_static = get_object_or_404(StaticBgImage, static_id=request.data.get('static_bg_id'))
+        #         request.data['diary_bg_url'] = "found_static_url"
+        #         # request.data['sns_link'] = "nazoongeh"
+        #
+        #         diary_serializera = DiaryCreateSerializer(data=request.data)
+        #         if diary_serializera.is_valid():
+        #             diary_serializera.save(calendar=calendar_instance)
+        #         else:
+        #             return Response(status=status.HTTP_400_BAD_REQUEST)
+        #         diary_id = diary_serializera.data['diary_id']
+        #         request.session['member_id'] = member_id
+        #         f"{request.get_host()}/ws/{diary_id}?type=guest&guest={member_id}"
+        #         return Response(diary_serializera.data, status=status.HTTP_200_OK)
+        #
+        #     else:
+        #         return Response({'errors': '데이터 값이 유효하지 않습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        #
+        #
+        # # 캘린더가 있을떄(diary_id가 있을떄)
+        # else:
+        #     calendar_instance = get_object_or_404(Harucalendar, calendar=request.data.get('calendar_id'))
+        #     calendar_duplication = Harucalendar.objects.filter(year_month_day=request.data.get('diary_date'))
+        #     if calendar_duplication:
+        #         return Response({'error': '해당일에 이미 일기가 있습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        #     diary_serializer = DiaryCreateSerializer(data=request.data)
+        #     if diary_serializer.is_valid():
+        #         diary_serializer.save(calendar=calendar_instance)
+        #     else:
+        #         return Response(diary_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
     # 일기장 최종 저장
 

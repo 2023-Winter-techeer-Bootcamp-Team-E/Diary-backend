@@ -112,6 +112,8 @@ TEMPLATES = [
 ]
 
 ASGI_APPLICATION = 'config.asgi.application'
+# CHHANNEL_LAYERS = {
+#
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
@@ -177,6 +179,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 DALLE_API_KEY = env('DALLE_API_KEY')
 
+
 # AWS S3 설정
 AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
@@ -213,4 +216,5 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Seoul'
 CELERY_ENABLE_UTC = False
+
 
