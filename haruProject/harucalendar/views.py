@@ -16,12 +16,15 @@ from .swaggerserializer import HarucalendarstickerRequestSerializer, Harucalenda
 
 class HarucalendarView(APIView):  # 캘린더 조회
 
-    @swagger_auto_schema(query_serializer=HarucalendarRequestSerializer,
+    @swagger_auto_schema(
+        operation_description="calendar 조회",
+        operation_summary="claendar_id 에 대응되는 일기 출력",
+        query_serializer=HarucalendarRequestSerializer,
                          responses={200: HarucalendarGetResponseSerializer})
     def get(self, request, member_id):
         try:
             year_month_day = request.query_params.get('year_month_day') #뉴진스랑 상의
-            print(year_month_day)
+            print(member_id)
             harucalendar = get_object_or_404(Harucalendar, member=member_id, year_month_day=year_month_day)
             # 조회가 성공하면 쿠키에 켈린더아이디랑 멤버아이디 기입, 기존 멤버아이디가 있는 쿠키에 캘린더 아이디를 심어 쓰기 선택.
             #만든걸 리스폰스에 같이 심어서 보내주기.
@@ -72,7 +75,10 @@ class HarucalendarView(APIView):  # 캘린더 조회
 
 
 class HarucalendarstickerView(APIView):
-    @swagger_auto_schema(query_serializer=HarucalendarstickerRequestSerializer,
+    @swagger_auto_schema(
+        operation_description="켈린더 스티커 부착",
+        operation_summary="켈린더를 꾸밀 수 있음",
+        query_serializer=HarucalendarstickerRequestSerializer,
                          responses={200: HarucalendarstickerGetResponseSerializer})
     def post(self, request):
         try:

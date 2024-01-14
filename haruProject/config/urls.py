@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
-from diary.views import Diaries
+from diary.views import DiariesGet,DiariesPost
 from harucalendar.views import HarucalendarView
 from django.contrib import admin
 from django.urls import path, re_path, include

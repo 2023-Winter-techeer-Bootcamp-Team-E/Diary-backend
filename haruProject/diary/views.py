@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
 from member.models import Member
 from static.models import StaticBgImage
@@ -29,10 +30,16 @@ from .swaggerserializer import DiaryGetRequestSerializer, DiaryGetResponseSerial
 
 # Create your views here.
 
-class Diaries(APIView):
+class DiariesGet(APIView):
     # 일기장 조회
-    @swagger_auto_schema(query_serializer=DiaryGetRequestSerializer, responses={200: DiaryGetResponseSerializer})
+
+    @swagger_auto_schema(
+        operation_description="diary_id를 입력하면 관련된 일기,텍스트박스,스티커 출력",
+        operation_summary="일기장 조회",
+        responses= {200: DiaryGetResponseSerializer}
+    )
     def get(self, request, diary_id):
+
         found_diary = get_object_or_404(Diary, diary_id=diary_id)
 
         try:
@@ -41,9 +48,10 @@ class Diaries(APIView):
         except ObjectDoesNotExist:
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
-    #만약 쿠키가 있다면 캘린더 아이디만 받게 ??
 
-    # 일기장 생성SwaggerDiaryCreateRequestSerializer
+
+class DiariesPost(APIView):
+    # 일기장 생성
     @staticmethod
     @swagger_auto_schema(request_body=SwaggerDiaryCreateRequestSerializer, responses={200: SwaggerDiaryCreateResponseSerializer})
     def post(request):
@@ -147,7 +155,8 @@ def request_manager(request):
 
 # 일기장 링크공유
 class DiaryManager(APIView):
-    @swagger_auto_schema(responses={200: DiaryLinkGetResponseSerializer})
+    @swagger_auto_schema(
+        responses={200: DiaryLinkGetResponseSerializer})
     def get(self, request, diary_id):
 
         found_diary = Diary.objects.get(diary_id=diary_id)
@@ -160,11 +169,12 @@ class DiaryManager(APIView):
 
 
 class DiaryTextBoxManager(APIView):
-    @swagger_auto_schema(
-        request_body=DiaryTextBoxPutRequestSerializer,  # YourSerializer는 사용자 정의 시리얼라이저입니다.
-        responses={200: 'DiaryTextBoxPutResponseSerializer'},
-        operation_description="This is your PUT method description."
-    )
+    @swagger_auto_schema(operation_description="일기 최종 저장",
+                         operation_summary="기존 만들어진 일기에 일기 텍스트 박스 및 스티커 정보 저장",
+                         request_body=DiaryTextBoxPutRequestSerializer,  # YourSerializer는 사용자 정의 시리얼라이저입니다.
+                         responses={200: 'DiaryTextBoxPutResponseSerializer'},
+
+                         )
     def put(self, request):
         diary_id = request.data.get('diary_id')
         if diary_id is None:
@@ -192,7 +202,6 @@ class DiaryTextBoxManager(APIView):
             return Response({'code': 'D001', 'status': '201', 'message': '일기장 저장 성공!'}, status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
-
 
     '''
     @swagger_auto_schema(query_serializer=DiaryTextBoxPostRequestSerializer,responses={200:DiaryTextBoxPostResponseSerializer})
