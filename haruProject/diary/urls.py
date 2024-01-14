@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import DiaryManager, DiaryTextBoxManager, DiaryStickerManager, Diaries
 
+
 urlpatterns = [
     path('', Diaries.as_view(), name='diaries'),
     path('link/<int:diary_id>', DiaryManager.as_view(), name='diary_manager'),
