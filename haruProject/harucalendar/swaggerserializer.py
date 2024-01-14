@@ -1,17 +1,25 @@
 from rest_framework import serializers
 
 
-class HarucalendarstickerRequestSerializer(serializers.Serializer):
-    calendar_id = serializers.IntegerField()  # year
-    sticker_image_url = serializers.CharField(max_length=20)  # month
+class HarucalendarstickerSerializer(serializers.Serializer):
+    calendar_id = serializers.IntegerField()
+    member_id = serializers.IntegerField()
+    year_month = serializers.IntegerField()
+    sticker_image_url = serializers.CharField()
     xcoor = serializers.IntegerField()
     ycoor = serializers.IntegerField()
     height = serializers.IntegerField()
-    rolate = serializers.IntegerField()
+    rotate = serializers.IntegerField()
     width = serializers.IntegerField()
 
 
+class HarucalendarstickerRequestSerializer(serializers.Serializer):
+    stickers = serializers.ListField(child=HarucalendarstickerSerializer())
+
+
 class HarucalendarstickerGetResponseSerializer(serializers.Serializer):
+    calendar_id = serializers.IntegerField()
+    year_month = serializers.IntegerField()
     code = serializers.CharField()
     status = serializers.CharField()
     message = serializers.CharField()
@@ -19,13 +27,14 @@ class HarucalendarstickerGetResponseSerializer(serializers.Serializer):
 
 class HarucalendarDiaryGetRequestSerializer(serializers.Serializer):
     diary_id = serializers.IntegerField()
+    day = serializers.CharField()
+    created_at = serializers.DateTimeField()
     is_expired = serializers.BooleanField()
-    diary_day = serializers.CharField()
 
 
 class HarucalendarRequestSerializer(serializers.Serializer):
     calendar_id = serializers.IntegerField()
-    year_month_day = serializers.CharField()
+    year_month = serializers.CharField()
 
 
 class HarucalendarGetResponseSerializer(serializers.Serializer):

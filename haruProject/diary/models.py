@@ -6,13 +6,14 @@ from harucalendar.models import Harucalendar
 
 class Diary(models.Model):
     diary_id = models.AutoField(primary_key=True)
-    calendar = models.ForeignKey(Harucalendar, related_name='calendar', on_delete=models.CASCADE)
-    diary_date = models.CharField(max_length=10)
-    diary_day = models.CharField(max_length=10, blank=True)
-    sns_link = models.CharField(max_length=500, blank=True)
-    diary_bg_url = models.CharField(max_length=500)
+    calendar = models.ForeignKey(Harucalendar, on_delete=models.CASCADE)
+    title = models.CharField(max_length=100)
+    year_month = models.CharField(max_length=10)
+    day = models.CharField(max_length=10)
+    sns_link = models.CharField(max_length=500)
+    diary_bg_url = models.URLField()
     is_expiry = models.BooleanField(default=False, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
 
@@ -35,7 +36,7 @@ class DiaryTextBox(models.Model):
 class DiarySticker(models.Model):
     sticker_id = models.AutoField(primary_key=True)
     diary = models.ForeignKey(Diary, related_name="diaryStickers", on_delete=models.CASCADE)
-    sticker_image_url = models.CharField(max_length=500)
+    sticker_image_url = models.URLField(max_length=500)
     xcoor = models.IntegerField(blank=True,null=True)
     ycoor = models.IntegerField(blank=True,null=True)
     width = models.IntegerField(blank=True,null=True)
