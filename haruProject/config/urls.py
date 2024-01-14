@@ -34,9 +34,9 @@ urlpatterns = [
     # path('api/v1/calendars', include('harucalendar.urls')),
     path('api/v1/calendars/', include('harucalendar.urls')),
     path('api/v1/diaries/', include('diary.urls')),
-    # path('api/v1/diaries', include('diary.urls')),
+    path('api/v1/diaries', Diaries.as_view()),
     path('api/v1/guests', include('guest.urls')),
-    path('api/v1/static/', include('static.urls'))
+    path('api/v1/diaryroom/', include('diaryRoom.urls')),
 
 ]
 

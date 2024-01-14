@@ -10,7 +10,7 @@ migrations/
 *.so
 node_modules/
 package-lock.json
-
+frontend
 # Distribution / packaging
 .Python
 build/
