@@ -1,15 +1,21 @@
 from django.core.exceptions import ObjectDoesNotExist
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.decorators import api_view
 from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from member.models import Member
-from .models import Diary
+from static.models import StaticBgImage
+from .models import Diary, DiaryTextBox
+
 from .serializers import (DiaryDetailSerializer, DiarySnsLinkSerializer,
-                          DiaryCreateSerializer, DiaryTextBoxCreateSerializer,
-                          DiaryStickerCreateSerializer, DiaryUpdateSerializer)
+                          DiaryCreateSerializer,
+                          DiaryStickerCreateSerializer, DiaryTextBoxCreateSerializer)
+
 from harucalendar.models import Harucalendar
 from harucalendar.serializer import HarucalendarCreateSerializer
 from .utils import extract_top_keywords, generate_sticker_images
@@ -17,17 +23,14 @@ from botocore.exceptions import NoCredentialsError
 import boto3
 import uuid
 import time
+import requests
 
-from .swaggerserializer import DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer, \
-    DiaryTextBoxPutRequestSerializer, DiaryStickerRequestSerializer, \
+from .swaggerserializer import DiaryGetRequestSerializer, DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer, \
+    DiaryTextBoxPutRequestSerializer, DiaryTextBoxPutResponseSerializer, DiaryStickerRequestSerializer, \
     DiaryStickerGetResponseSerializer, SwaggerDiaryCreateRequestSerializer, SwaggerDiaryCreateResponseSerializer
 
 
-# Create your views here.
-
-class Diaries(APIView):
-    # 일기장 조회
-
+class DiariesGet(APIView):
     @swagger_auto_schema(
         operation_description="일기에 연동 된 텍스트박스,스티커 등등 출력<br>1.해당달에 존재 하는 전반적인 일기 목록은 캘린더 조회에서 확인<br> 2.일기의 세부 내용(스티커,텍스트박스 등) 출력",
         operation_summary="일기 조회",
@@ -43,17 +46,18 @@ class Diaries(APIView):
         except ObjectDoesNotExist:
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
-    @staticmethod
-    @swagger_auto_schema(request_body=SwaggerDiaryCreateRequestSerializer, responses={200: SwaggerDiaryCreateResponseSerializer})
-    def post(request):
-        # 쿠키로 받아서 쓸거임 claendar id, member-id
-        calendar_id = request.session.get('calendar_id')
-        member_id = request.session.get('member_id')
 
-        if member_id is None:
-            return Response({'error': '로그인이 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
-        diary_date = request.data.get('diary_date')
 
+class DiariesPost(APIView):
+    @swagger_auto_schema(
+        operation_description="1.캘린더가 없는상태면 캘린더 생성 후 다이어리 저장,<br>2.캘린더 존재 시 다이어리 바로 저장",
+        operation_summary="일기초안 생성",
+        request_body=SwaggerDiaryCreateRequestSerializer, responses={200: SwaggerDiaryCreateResponseSerializer})
+    def post(self, request):
+        calendar_id = request.data.get('calendar_id')
+        member_id = request.data.get('member_id')
+        year_month = request.data.get('year_month')
+        day = request.data.get('day')
         if calendar_id is None:
             member_instance = get_object_or_404(Member, member_id=member_id)
             calendar_serializer = HarucalendarCreateSerializer(data={'year_month': year_month})
@@ -151,23 +155,6 @@ def request_manager(request):
         #         diary_serializer.save(calendar=calendar_instance)
         #     else:
         #         return Response(diary_serializer.data, status=status.HTTP_400_BAD_REQUEST)
-
-
-    # 일기장 최종 저장
-
-# 일기장 링크공유
-class DiaryManager(APIView):
-    @swagger_auto_schema(
-        responses={200: DiaryLinkGetResponseSerializer})
-    def get(self, request, diary_id):
-
-        found_diary = Diary.objects.get(diary_id=diary_id)
-
-        try:
-            sns_link = DiarySnsLinkSerializer(found_diary)
-            return Response(status=status.HTTP_200_OK, data=sns_link.data)
-        except ObjectDoesNotExist:
-            return Response({"error": "diary snsLink does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class DiariesPut(APIView):

@@ -93,25 +93,6 @@ CORS_ORIGIN_WHITELIST = [
 CORS_ALLOW_CREDENTIALS = True
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",
-    "http://127.0.0.1",
-    "http://localhost:file",
-]
-
-CORS_ORIGIN_ALLOW_ALL = True
-
-SESSION_COOKIE_SAMESITE = None
-
-# SESSION_COOKIE_DOMAIN = "founderslooking.com"
-
-#SESSION_COOKIE_SECURE = False
-
-CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://*.127.0.0.1"]
-
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
