@@ -23,12 +23,13 @@ class DiaryStickerGetSerializer(serializers.Serializer):
     rotate = serializers.IntegerField()
 
 
-
-
 class SwaggerDiaryCreateRequestSerializer(serializers.Serializer):
+    calendar_id=serializers.IntegerField()
     member_id = serializers.IntegerField()
-    diary_date = serializers.CharField()
-    diary_bg_url = serializers.CharField()
+    year_month = serializers.IntegerField()
+    day=serializers.IntegerField()
+    title=serializers.CharField()
+    diary_bg_url = serializers.URLField()
     static_bg_id = serializers.IntegerField()
 
 
@@ -40,13 +41,14 @@ class SwaggerDiaryCreateResponseSerializer(serializers.Serializer):
 class DiaryGetResponseSerializer(serializers.Serializer):
     diary_id = serializers.IntegerField()
     diary_date = serializers.CharField()
-    diary_bg_url = serializers.CharField()
+    diary_bg_url = serializers.URLField()
     is_expiry = serializers.BooleanField()
     diaryTextBoxs = DiaryTextBoxGetSerializer()
     diaryStickers = DiaryStickerGetSerializer()
 
+
 class DiaryGetRequestSerializer(serializers.Serializer):
-        diary_id = serializers.IntegerField(required=True)
+    diary_id = serializers.IntegerField(required=True)
 
 
 class DiaryLinkResponseSerializer(serializers.Serializer):
