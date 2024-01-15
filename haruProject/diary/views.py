@@ -19,7 +19,8 @@ import time
 
 from .swaggerserializer import DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer, \
     DiaryTextBoxPutRequestSerializer, DiaryStickerRequestSerializer, \
-    DiaryStickerGetResponseSerializer, SwaggerDiaryCreateRequestSerializer, SwaggerDiaryCreateResponseSerializer
+    DiaryStickerGetResponseSerializer, SwaggerDiaryCreateRequestSerializer, SwaggerDiaryCreateResponseSerializer, \
+    DiaryGetRequestSerializer
 
 
 # Create your views here.
@@ -29,14 +30,14 @@ class Diaries(APIView):
     @swagger_auto_schema(
         operation_description="일기에 연동 된 텍스트박스,스티커 등등 출력<br>1.해당달에 존재 하는 전반적인 일기 목록은 캘린더 조회에서 확인<br> 2.일기의 세부 내용(스티커,텍스트박스 등) 출력",
         operation_summary="일기 조회",
+        query_serializer=DiaryGetRequestSerializer,
         responses={200: DiaryGetResponseSerializer}
     )
-    def get(self, request, diary_id):
-        found_diary = get_object_or_404(Diary, diary_id=diary_id)
-
+    def get(self, request):
+        diary_id = request.query_params.get('diary_id')
+        found_diary = Diary.objects.get(diary_id=diary_id)
         try:
             serialized_diary = DiaryDetailSerializer(found_diary).data
-
             return Response(status=status.HTTP_200_OK, data=serialized_diary)
         except ObjectDoesNotExist:
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)

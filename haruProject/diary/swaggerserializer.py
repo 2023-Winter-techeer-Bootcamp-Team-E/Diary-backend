@@ -2,6 +2,10 @@ from diary import serializers
 from rest_framework import serializers
 
 
+class DiaryGetRequestSerializer(serializers.Serializer):
+    diary_id = serializers.IntegerField(required=True)
+
+
 class DiaryTextBoxGetSerializer(serializers.Serializer):
     textbox_id = serializers.IntegerField()
     writer = serializers.CharField()
@@ -37,8 +41,8 @@ class DiaryGetResponseSerializer(serializers.Serializer):
     day = serializers.IntegerField()
     diary_bg_url = serializers.CharField()
     is_expiry = serializers.BooleanField()
-    diaryTextBoxs = DiaryTextBoxGetSerializer()
-    diaryStickers = DiaryStickerGetSerializer()
+    diaryTextBoxs = DiaryTextBoxGetSerializer(many=True)
+    diaryStickers = DiaryStickerGetSerializer(many=True)
 
 
 class DiaryGetRequestSerializer(serializers.Serializer):
