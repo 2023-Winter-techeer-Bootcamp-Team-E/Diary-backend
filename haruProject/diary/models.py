@@ -8,7 +8,7 @@ class Diary(models.Model):
     diary_id = models.AutoField(primary_key=True)
     calendar = models.ForeignKey(Harucalendar, related_name='calendar', on_delete=models.CASCADE)
     year_month = models.CharField(max_length=10) #(2024/12)
-    day = models.IntegerField() #(1~31)
+    day = models.CharField(max_length=10) #(1~31)
     sns_link = models.CharField(max_length=500, blank=True)
     diary_bg_url = models.CharField(max_length=500)
     is_expiry = models.BooleanField(default=False, blank=True)
