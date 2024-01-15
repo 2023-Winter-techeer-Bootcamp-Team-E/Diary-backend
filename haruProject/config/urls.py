@@ -1,22 +1,14 @@
-from django.contrib import admin
-from django.urls import path, include
-from diary.views import Diaries
-from harucalendar.views import HarucalendarView
-from django.contrib import admin
-from django.urls import path, re_path, include
 from rest_framework import permissions
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
 from django.contrib import admin
 from django.urls import path, include
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from rest_framework.permissions import AllowAny
+
 
 schema_view = get_schema_view(
    openapi.Info(
       title="Snippets API",
-      default_version='api/v1',
+      default_version='v1',
       description="Test description",
       terms_of_service="https://www.google.com/policies/terms/",
       contact=openapi.Contact(email="contact@snippets.local"),
@@ -28,16 +20,12 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
-
     path('api/v1/members/', include('member.urls')),
     path('admin/', admin.site.urls),
-    # path('api/v1/calendars', include('harucalendar.urls')),
     path('api/v1/calendars/', include('harucalendar.urls')),
     path('api/v1/diaries/', include('diary.urls')),
-    path('api/v1/diaries', Diaries.as_view()),
-    path('api/v1/guests', include('guest.urls')),
-    path('api/v1/diaryroom/', include('diaryRoom.urls')),
-
+    path('api/v1/guests/', include('guest.urls')),
+    path('api/v1/static/', include('static.urls')),
 ]
 
 urlpatterns += [

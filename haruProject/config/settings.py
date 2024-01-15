@@ -87,7 +87,6 @@ MIDDLEWARE = [
 CORS_ORIGIN_WHITELIST = [
     "https://127.0.0.1:3000",  # for dev remove
     "http://127.0.0.1:8000",
-    "https://127.0.0.1:*",  # for dev remove
     # for dev remove
     "http://frontend:3000",
     "http://backend:8000",
@@ -97,16 +96,13 @@ CORS_ORIGIN_WHITELIST = [
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",
     "http://127.0.0.1",
-    "http://localhost:file",
 ]
 CORS_ALLOW_CREDENTIALS = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_SAMESITE = None
-SESSION_COOKIE_DOMAIN = '127.0.0.1'  # 또는 'localhost' 등 적절한 도메인
-
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 CORS_ORIGIN_ALLOW_ALL = True
 
@@ -117,9 +113,6 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://127.0.0.1"]
 
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
@@ -145,23 +138,23 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'haru',
-        'USER': 'root',
-        'PASSWORD': '12345678',
-        'HOST': 'db',
-        'PORT': '3306',
-    }
-}
-
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'haru',
+#         'USER': 'root',
+#         'PASSWORD': '12345678',
+#         'HOST': 'db',
+#         'PORT': '3306',
 #     }
 # }
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -229,7 +222,7 @@ AWS_S3_USE_SSL = True
 # Media files (uploads)
 #DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 #MEDIA_URL = f"{AWS_S3_URL_PROTOCOL}://{AWS_S3_CUSTOM_DOMAIN}/media/"
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+# SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,

@@ -9,7 +9,6 @@ from .serializer import HarucalendarAllSerializer, HarucalendarstickerAllSeriali
     HarucalendarStickerCreateSerializer, HarucalendarCreateSerializer
 from rest_framework.views import APIView
 from diary.models import Diary
-from diary.serializers import DiaryShowserializer
 from member.models import Member
 
 from .swaggerserializer import HarucalendarstickerRequestSerializer, HarucalendarstickerGetResponseSerializer, \
@@ -23,14 +22,20 @@ class HarucalendarView(APIView):  # 캘린더 조회
                               "다이어리id)<br>3.다이어리의 상세한 내용은 다이어리 "
                               "조회로.<br>3.입력예시:http://127.0.0.1:8000/api/v1/calendars/1?year_month=202401)",
         operation_summary="켈린더 조회",
-        query_serializer=HarucalendarRequestSerializer  ,
+        query_serializer=HarucalendarRequestSerializer,
         responses={200: HarucalendarGetResponseSerializer})
-    def get(self, request, member_id):
+    def get(self, request):
+        year_month = request.query_params.get('year_month')
+        member_id = request.session['member_id']
         try:
-            year_month = request.query_params.get('year_month')
-            harucalendar = get_object_or_404(Harucalendar, member=member_id, year_month=year_month)
+            harucalendar = Harucalendar.objects.get(member=member_id, year_month=year_month)
+            request.session['calendar_id'] = harucalendar.calendar_id
+
+            # harucalendar = get_object_or_404(Harucalendar, member=member_id, year_month=year_month)
 
         except ObjectDoesNotExist:
+            request.session['calendar_id'] = None
+            request.session['year_month'] = year_month
             return Response({'message': '달력이 존재하지 않습니다.'},
                             status=status.HTTP_404_NOT_FOUND)
 
@@ -57,17 +62,12 @@ class HarucalendarView(APIView):  # 캘린더 조회
         #         'diary_textboxes': [{'writer': textbox.writer, 'content': textbox.content} for textbox in
         #                             diary_textboxes]
         #     })
-
         # request.session['calendar_session_list'] = calendar_session_list
-
         harucalendarserializer = HarucalendarAllSerializer(harucalendar)  # 캘린더 시리얼라이징
-
         request.session['calendar_id'] = harucalendarserializer.data['calendar_id']
-
         # session checking
         # for key, value in request.session.items():
         #     print(f'세션 키: {key}, 세션 값: {value}')
-
         return Response({
             'code': 'C001',
             'status': '200',
@@ -76,7 +76,7 @@ class HarucalendarView(APIView):  # 캘린더 조회
             'diaries': diary_list,
         }, status=status.HTTP_200_OK)
 
-
+# 스티커 하나씩 api요청인지 확인 -> 우희 피드백
 class HarucalendarstickerView(APIView):
     @swagger_auto_schema(
         operation_description="1.캘린더가 있는상태에서는 스티커를 바로 붙힘. <br>2.캘린더가 없으면 생성 후 스티커를 붙힘. ",
@@ -84,35 +84,36 @@ class HarucalendarstickerView(APIView):
         request_body=HarucalendarstickerRequestSerializer,
         responses={200: HarucalendarstickerGetResponseSerializer})
     def post(self, request):
+        request.session['calendar_id'] = request.data.get('calendar_id')
+        request.session['member_id'] = request.data.get('member_id')
         try:
             stickers_data = request.data.get('stickers', [])
             for sticker_data in stickers_data:
                 calendar_id = sticker_data.get('calendar_id')
                 sticker_url = sticker_data.get('sticker_image_url')
                 member_id = sticker_data.get('member_id')
-                year_month=sticker_data.get('year_month')
+                year_month = sticker_data.get('year_month')
 
-                if calendar_id is None:
-                    member_instance = get_object_or_404(Member, member_id=member_id)
-                    calendar_serializer = HarucalendarCreateSerializer(data={"year_month": year_month})
-                    if calendar_serializer.is_valid():
-                        new_calendar_id =calendar_serializer.save(member=member_instance).calendar_id
-                        new_harucalendar_instance = get_object_or_404(Harucalendar, calendar_id=new_calendar_id)
-                        sticker_serializer = HarucalendarStickerCreateSerializer(data=sticker_data)
+                member_instance = get_object_or_404(Member, member_id=member_id)
+                calendar_serializer = HarucalendarCreateSerializer(data={"year_month": year_month})
+                if calendar_serializer.is_valid():
+                    new_calendar_id = calendar_serializer.save(member=member_instance).calendar_id
+                    new_harucalendar_instance = get_object_or_404(Harucalendar, calendar_id=new_calendar_id)
+                    sticker_serializer = HarucalendarStickerCreateSerializer(data=sticker_data)
 
-                        if sticker_serializer.is_valid():
-                            sticker_serializer.save(calendar=new_harucalendar_instance)
-                            return Response({'calendar_id':new_calendar_id, 'year_month':year_month,'code': 'c002', 'status': '200', 'message': '스티커 추가 성공'}, status=status.HTTP_200_OK)
-                        else:
-                            print(sticker_serializer.errors)
-                            return Response(status=status.HTTP_400_BAD_REQUEST)
+                    if sticker_serializer.is_valid():
+                        sticker_serializer.save(calendar=new_harucalendar_instance)
+                        return Response(
+                            {'calendar_id': new_calendar_id, 'year_month': year_month, 'code': 'c002', 'status': '200',
+                             'message': '스티커 추가 성공'}, status=status.HTTP_200_OK)
+                    else:
+                        return Response(status=status.HTTP_400_BAD_REQUEST)
 
                     harucalendar_instance = get_object_or_404(Harucalendar, calendar_id=calendar_id)
                     sticker_serializer = HarucalendarStickerCreateSerializer(data=sticker_data)
                     if sticker_serializer.is_valid():
                         sticker_serializer.save(calendar=harucalendar_instance)
                     else:
-                        print(sticker_serializer.errors)
                         return Response(status=status.HTTP_400_BAD_REQUEST)
 
             return Response({'calendar_id':calendar_id, 'year_month':year_month,'code': 'c002', 'status': '200', 'message': '스티커 추가 성공'}, status=200)
