@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
-from diary.views import DiariesGet,DiariesPost
+from diary.views import Diaries
 from harucalendar.views import HarucalendarView
 from django.contrib import admin
 from django.urls import path, re_path, include
@@ -16,7 +16,7 @@ from rest_framework.permissions import AllowAny
 schema_view = get_schema_view(
    openapi.Info(
       title="Snippets API",
-      default_version='v1',
+      default_version='api/v1',
       description="Test description",
       terms_of_service="https://www.google.com/policies/terms/",
       contact=openapi.Contact(email="contact@snippets.local"),
@@ -34,9 +34,9 @@ urlpatterns = [
     # path('api/v1/calendars', include('harucalendar.urls')),
     path('api/v1/calendars/', include('harucalendar.urls')),
     path('api/v1/diaries/', include('diary.urls')),
-    # path('api/v1/diaries', include('diary.urls')),
+    path('api/v1/diaries', Diaries.as_view()),
     path('api/v1/guests', include('guest.urls')),
-    path('api/v1/static/', include('static.urls'))
+    path('api/v1/diaryroom/', include('diaryRoom.urls')),
 
 ]
 

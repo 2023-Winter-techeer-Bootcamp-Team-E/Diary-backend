@@ -9,6 +9,8 @@ from .serializer import HarucalendarAllSerializer, HarucalendarstickerAllSeriali
     HarucalendarStickerCreateSerializer, HarucalendarCreateSerializer
 from rest_framework.views import APIView
 from diary.models import Diary
+from diary.serializers import DiaryShowserializer
+from member.models import Member
 
 from .swaggerserializer import HarucalendarstickerRequestSerializer, HarucalendarstickerGetResponseSerializer, \
     HarucalendarRequestSerializer, HarucalendarGetResponseSerializer
@@ -17,17 +19,17 @@ from .swaggerserializer import HarucalendarstickerRequestSerializer, Harucalenda
 class HarucalendarView(APIView):  # 캘린더 조회
 
     @swagger_auto_schema(
-        operation_description="calendar 조회",
-        operation_summary="claendar_id 에 대응되는 일기 출력",
-        query_serializer=HarucalendarRequestSerializer,
-                         responses={200: HarucalendarGetResponseSerializer})
+        operation_description="1.켈린더 조회 시 해당하는 캘린더가 없으면 없다고 반환(생성은X).<br>2.해당하는 캘린더가 있을 시, 해당하는 달에 있는 다이어리를 보여줌(작성유무,"
+                              "다이어리id)<br>3.다이어리의 상세한 내용은 다이어리 "
+                              "조회로.<br>3.입력예시:http://127.0.0.1:8000/api/v1/calendars/1?year_month=202401)",
+        operation_summary="켈린더 조회",
+        query_serializer=HarucalendarRequestSerializer  ,
+        responses={200: HarucalendarGetResponseSerializer})
     def get(self, request, member_id):
         try:
-            year_month_day = request.query_params.get('year_month_day') #뉴진스랑 상의
-            print(member_id)
-            harucalendar = get_object_or_404(Harucalendar, member=member_id, year_month_day=year_month_day)
-            # 조회가 성공하면 쿠키에 켈린더아이디랑 멤버아이디 기입, 기존 멤버아이디가 있는 쿠키에 캘린더 아이디를 심어 쓰기 선택.
-            #만든걸 리스폰스에 같이 심어서 보내주기.
+            year_month = request.query_params.get('year_month')
+            harucalendar = get_object_or_404(Harucalendar, member=member_id, year_month=year_month)
+
         except ObjectDoesNotExist:
             return Response({'message': '달력이 존재하지 않습니다.'},
                             status=status.HTTP_404_NOT_FOUND)
@@ -35,13 +37,14 @@ class HarucalendarView(APIView):  # 캘린더 조회
         diary = Diary.objects.filter(calendar=harucalendar.calendar_id)
         diary_list = []
 
-        for item in diary:  # 하루다이어리에서 다이어리id, 만료여부를 리스트에 저장
+        for items in diary:
             diary_list.append({
-                'diary_id': item.diary_id,
-                'is_expiry': item.is_expiry,
-                'diary_day': item.diary_day
+                'diary_id': items.diary_id,
+                'is_expiry': items.is_expiry,
+                'day': items.day,
+                'created_at': items.created_at,
+                'is_expired': items.is_expiry,
             })
-
 
         # calendar_session_list = []
         # for item in Diary.objects.all():
@@ -76,22 +79,34 @@ class HarucalendarView(APIView):  # 캘린더 조회
 
 class HarucalendarstickerView(APIView):
     @swagger_auto_schema(
-        operation_description="켈린더 스티커 부착",
-        operation_summary="켈린더를 꾸밀 수 있음",
-        query_serializer=HarucalendarstickerRequestSerializer,
-                         responses={200: HarucalendarstickerGetResponseSerializer})
+        operation_description="1.캘린더가 있는상태에서는 스티커를 바로 붙힘. <br>2.캘린더가 없으면 생성 후 스티커를 붙힘. ",
+        operation_summary="캘린더 스티커 부착(캘린더 꾸미기)",
+        request_body=HarucalendarstickerRequestSerializer,
+        responses={200: HarucalendarstickerGetResponseSerializer})
     def post(self, request):
         try:
             stickers_data = request.data.get('stickers', [])
             for sticker_data in stickers_data:
                 calendar_id = sticker_data.get('calendar_id')
                 sticker_url = sticker_data.get('sticker_image_url')
+                member_id = sticker_data.get('member_id')
+                year_month=sticker_data.get('year_month')
+
                 if calendar_id is None:
-                    return Response({'error': 'stickers 내부의 calendar_id가 제공되지 않았습니다.'},
-                                    status=status.HTTP_400_BAD_REQUEST)
-                elif sticker_url is None:
-                    return Response({'error': '스티커 URL이 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-                else:
+                    member_instance = get_object_or_404(Member, member_id=member_id)
+                    calendar_serializer = HarucalendarCreateSerializer(data={"year_month": year_month})
+                    if calendar_serializer.is_valid():
+                        new_calendar_id =calendar_serializer.save(member=member_instance).calendar_id
+                        new_harucalendar_instance = get_object_or_404(Harucalendar, calendar_id=new_calendar_id)
+                        sticker_serializer = HarucalendarStickerCreateSerializer(data=sticker_data)
+
+                        if sticker_serializer.is_valid():
+                            sticker_serializer.save(calendar=new_harucalendar_instance)
+                            return Response({'calendar_id':new_calendar_id, 'year_month':year_month,'code': 'c002', 'status': '200', 'message': '스티커 추가 성공'}, status=status.HTTP_200_OK)
+                        else:
+                            print(sticker_serializer.errors)
+                            return Response(status=status.HTTP_400_BAD_REQUEST)
+
                     harucalendar_instance = get_object_or_404(Harucalendar, calendar_id=calendar_id)
                     sticker_serializer = HarucalendarStickerCreateSerializer(data=sticker_data)
                     if sticker_serializer.is_valid():
@@ -100,7 +115,7 @@ class HarucalendarstickerView(APIView):
                         print(sticker_serializer.errors)
                         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-            return Response({'code': 'c002', 'status': '200', 'message': '스티커 추가 성공'}, status=200)
+            return Response({'calendar_id':calendar_id, 'year_month':year_month,'code': 'c002', 'status': '200', 'message': '스티커 추가 성공'}, status=200)
 
         except ObjectDoesNotExist:
             return Response({'error': '켈린더가 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
