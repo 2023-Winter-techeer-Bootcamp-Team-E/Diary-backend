@@ -174,6 +174,7 @@ class DiaryStickerManager(APIView):
             # diary_text_box = DiaryTextBox.objects.create(content=content)
 
             # 일기 내용에서 상위 3개 키워드 추출
+            # comprehend 안들어가는 경우 예외 처리 필요****
             top_keywords = extract_top_keywords(content)
             print(top_keywords)
             # 상위 키워드로 DALL-E API 호출하여 스티커 이미지 생성

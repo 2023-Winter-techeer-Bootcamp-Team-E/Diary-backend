@@ -6,6 +6,7 @@ from PIL import Image
 from io import BytesIO
 from rembg import remove
 from config.settings import DALLE_API_KEY
+from .tasks import generate_sticker_image, remove_background
 
 
 def extract_top_keywords(diary_text):
@@ -40,49 +41,23 @@ def get_korean_stopwords():
     return stopwords
 
 
-def generate_sticker_image(keyword):
-    client = OpenAI(api_key=DALLE_API_KEY)
-
-    response = client.images.generate(
-        model="dall-e-3",
-        prompt=f"{keyword}가 들어간 일러스트 느낌의 스티커",
-        size="1024x1024",
-        quality="standard",
-        n=1,
-    )
-
-    image_url = response.data[0].url
-    return image_url
-
-
-def remove_background(image_data):
-    with Image.open(BytesIO(image_data)) as img:
-        #이미지 크기 조절 - 프론트엔드와 API연결 후 로딩시간 체크한 뒤에 이미지 사이즈 조절하는 걸로
-        #img = img.resize((300, 300))
-
-        new_img = remove(img)
-
-        output_buffer = BytesIO()
-
-        new_img.save(output_buffer, format="PNG")
-        output_data = output_buffer.getvalue()
-
-    return output_data
-
-
 def generate_sticker_images(keywords):
+
     sticker_image_urls = {}
 
+    tasks = []
     for keyword in keywords:
-        sticker_image_url = generate_sticker_image(keyword)
+        task = generate_sticker_image.delay(keyword)
+        tasks.append((keyword, task))
 
-        response = requests.get(sticker_image_url)
+    for keyword, task in tasks:
+
+        result = task.get()  # 대기하면서 결과 가져오기
+
+        response = requests.get(result)
         image_data = response.content
-
-        output_data = remove_background(image_data)
+        output_data = remove_background.delay(image_data).get()
 
         sticker_image_urls[keyword] = output_data
-        # 키: 키워드 (예: "happy", "love", 등)
-        # 값: 해당 키워드에 대한 스티커 이미지의 PNG 형식 binary data
 
     return sticker_image_urls
