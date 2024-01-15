@@ -17,7 +17,7 @@ class HarucalendarstickerAllSerializer(serializers.ModelSerializer):
 class HarucalendarCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Harucalendar
-        fields = ['year_month_day']
+        fields = ['year_month']
 
     def create(self, validated_data):
         return Harucalendar.objects.create(**validated_data)
@@ -27,7 +27,7 @@ class HarucalendarCreateSerializer(serializers.ModelSerializer):
 class HarucalendarStickerCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Harucalendarsticker
-        fields = ['calendar_id', 'sticker_image_url', 'xcoor', 'ycoor', 'width', 'height', 'rolate']  # 'rolate'가 맞습니다.
+        fields = ['calendar_id', 'sticker_image_url', 'xcoor', 'ycoor', 'width', 'height', 'rotate']  # 'rolate'가 맞습니다.
 
     def create(self, validated_data):
         return Harucalendarsticker.objects.create(**validated_data)

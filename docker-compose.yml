@@ -11,13 +11,14 @@ services:
     environment:
       MYSQL_DATABASE: "haru"
       MYSQL_ROOT_PASSWORD: "12345678"
+
     volumes:
       - db_data:/var/lib/mysql
 
-#    healthcheck:
-#      test: [ "CMD", "mysql", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}", "-e", "SELECT 1" ]
-#      timeout: 20s
-#      retries: 10
+    #    healthcheck:
+    #      test: [ "CMD", "mysql", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}", "-e", "SELECT 1" ]
+    #      timeout: 20s
+    #      retries: 10
     networks:
       - haru
 
@@ -57,12 +58,8 @@ services:
       - frontend
     expose:
       - '80'
-    networks:
-      - haru
     #      - '443'
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-    networks:
-      - haru
 
   backend:
     build:
@@ -92,34 +89,7 @@ services:
     networks:
       - haru
 
-  #
-  #  certbot:
-  #    image: certbot/certbot
-  #    restart: unless-stopped
-  #    volumes:
-  #      - ./certbot/conf:/etc/letsencrypt:rw
-  #      - ./certbot/www:/var/www/certbot:rw
-  #    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-  #    depends_on:
-  #      - nginx
 
-  celery:
-    container_name: celery
-#    env_file:
-#      - ./settings/.env
-    command: sh -c "celery -A celery worker --loglevel=info"
-    build:
-      #context: ./backend
-      dockerfile: Dockerfile
-    environment:
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
-    depends_on:
-      - rabbitmq
-      - backend
-    restart: always
-    tty: true
-    networks:
-      - haru
 
   rabbitmq:
     image: "rabbitmq:3.9-management"
@@ -137,11 +107,27 @@ services:
     depends_on:
       - backend
     restart: always   # restart: unless-stopped??
-    tty: true
     expose:
       - 5672
     networks:
       - haru
+
+  celery:
+    container_name: celery
+    #    env_file:
+    #      - ./settings/.env
+    command: sh -c "celery -A config worker --loglevel=info"
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+    depends_on:
+      - rabbitmq
+      - backend
+    networks:
+      - haru
+
 
   redis:
     image: "redis:latest"
@@ -151,15 +137,13 @@ services:
     restart: always
     networks:
       - haru
-      
+
 
 networks:
   haru:
     driver: bridge
+
 
 volumes:
-   build_folder: {}
-   db_data: {}
-networks:
-  haru:
-    driver: bridge
+  build_folder: { }
+  db_data: { }
