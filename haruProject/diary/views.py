@@ -162,7 +162,9 @@ class DiaryTextBoxManager(APIView):
 
 
 class DiaryStickerManager(APIView):
-    @swagger_auto_schema(request_body=DiaryStickerRequestSerializer,
+    @swagger_auto_schema(operation_summary="DALLE 스티커 생성",
+                         operation_description="content (일기 내용)을 받아와서 s3에 업로드된 url반환",
+                         request_body=DiaryStickerRequestSerializer,
                          responses={201: DiaryStickerGetResponseSerializer})
     def post(self, request, format=None):
         start = time.time()
