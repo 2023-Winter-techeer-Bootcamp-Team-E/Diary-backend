@@ -7,7 +7,7 @@ from django.conf import settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
 # Celery 앱을 생성합니다.
-app = Celery('config')
+app = Celery('haruProject')
 
 # Django 설정으로부터 Celery 설정을 가져옵니다.
 app.config_from_object('django.conf:settings', namespace='CELERY')
