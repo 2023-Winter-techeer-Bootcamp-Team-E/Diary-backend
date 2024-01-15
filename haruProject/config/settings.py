@@ -237,7 +237,7 @@ SWAGGER_SETTINGS = {
 }
 
 # celery와 관련된 환경설정
-CELERY_BROKER_URL = 'pyamqp://guest:guest@localhost:5672//'
+CELERY_BROKER_URL = 'amqp://guest:guest@rabbitmq:5672/'
 CELERY_RESULT_BACKEND = 'rpc://'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
