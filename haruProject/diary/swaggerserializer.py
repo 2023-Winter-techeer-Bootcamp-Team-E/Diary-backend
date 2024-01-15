@@ -28,12 +28,11 @@ class DiaryStickerGetSerializer(serializers.Serializer):
 
 
 class SwaggerDiaryCreateRequestSerializer(serializers.Serializer):
-    day = serializers.IntegerField()
+    day = serializers.CharField()
     diary_bg_id = serializers.IntegerField()
 
 class SwaggerDiaryCreateResponseSerializer(serializers.Serializer):
     diary_id = serializers.IntegerField()
-    sns_link = serializers.CharField()
 
 
 class DiaryGetResponseSerializer(serializers.Serializer):
@@ -89,7 +88,6 @@ class StickerPutRequestSerializer(serializers.Serializer):
 
 
 class DiaryTextBoxPutRequestSerializer(serializers.Serializer):
-    diary_id = serializers.IntegerField()
     day = serializers.CharField()
     textboxs = TextBoxPutRequestSerializer()
     stickers = StickerPutRequestSerializer()
