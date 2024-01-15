@@ -2,6 +2,10 @@ from diary import serializers
 from rest_framework import serializers
 
 
+class DiaryGetRequestSerializer(serializers.Serializer):
+    diary_id = serializers.IntegerField(required=True)
+
+
 class DiaryTextBoxGetSerializer(serializers.Serializer):
     textbox_id = serializers.IntegerField()
     writer = serializers.CharField()
@@ -24,14 +28,8 @@ class DiaryStickerGetSerializer(serializers.Serializer):
 
 
 class SwaggerDiaryCreateRequestSerializer(serializers.Serializer):
-    calendar_id=serializers.IntegerField()
-    member_id = serializers.IntegerField()
-    year_month = serializers.IntegerField()
-    day=serializers.IntegerField()
-    title=serializers.CharField()
-    diary_bg_url = serializers.URLField()
-    static_bg_id = serializers.IntegerField()
-
+    day = serializers.IntegerField()
+    diary_bg_id = serializers.IntegerField()
 
 class SwaggerDiaryCreateResponseSerializer(serializers.Serializer):
     diary_id = serializers.IntegerField()
@@ -40,11 +38,11 @@ class SwaggerDiaryCreateResponseSerializer(serializers.Serializer):
 
 class DiaryGetResponseSerializer(serializers.Serializer):
     diary_id = serializers.IntegerField()
-    diary_date = serializers.CharField()
-    diary_bg_url = serializers.URLField()
+    day = serializers.IntegerField()
+    diary_bg_url = serializers.CharField()
     is_expiry = serializers.BooleanField()
-    diaryTextBoxs = DiaryTextBoxGetSerializer()
-    diaryStickers = DiaryStickerGetSerializer()
+    diaryTextBoxs = DiaryTextBoxGetSerializer(many=True)
+    diaryStickers = DiaryStickerGetSerializer(many=True)
 
 
 class DiaryGetRequestSerializer(serializers.Serializer):
@@ -53,7 +51,7 @@ class DiaryGetRequestSerializer(serializers.Serializer):
 
 class DiaryLinkResponseSerializer(serializers.Serializer):
     diary_id = serializers.IntegerField()
-    diary_date = serializers.CharField()
+    day = serializers.IntegerField()
     sns_link = serializers.URLField()
 
 

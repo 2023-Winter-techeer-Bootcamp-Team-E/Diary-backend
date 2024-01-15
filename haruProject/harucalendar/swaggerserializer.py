@@ -33,7 +33,6 @@ class HarucalendarDiaryGetRequestSerializer(serializers.Serializer):
 
 
 class HarucalendarRequestSerializer(serializers.Serializer):
-    calendar_id = serializers.IntegerField()
     year_month = serializers.CharField()
 
 
