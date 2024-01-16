@@ -1,11 +1,6 @@
 import boto3
 from collections import Counter
-from openai import OpenAI
 import requests
-from PIL import Image
-from io import BytesIO
-from rembg import remove
-from config.settings import DALLE_API_KEY
 from .tasks import generate_sticker_image, remove_background
 
 
@@ -36,7 +31,7 @@ def preprocess_diary_text(diary_text):
 def get_korean_stopwords():
     stopwords = [
         "나", "오늘", "우리", "저희", "따라", "의해", "을", "를", "에", "의", "가", "으로", "로", "에게", "뿐이야",
-        "여서", "그리고"
+        "여서", "그리고", "이여서"
     ]
     return stopwords
 
