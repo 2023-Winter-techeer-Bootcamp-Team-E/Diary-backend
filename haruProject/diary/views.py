@@ -234,6 +234,15 @@ class DiaryStickerManager(APIView):
             # comprehend 안들어가는 경우 예외 처리 필요****
             top_keywords = extract_top_keywords(content)
             print(top_keywords)
+
+            if not top_keywords:
+                response_data = {
+                    'code': 'D001',
+                    'status': '200',
+                    'message': '키워드가 생성되지 않았습니다.'
+                }
+                return Response(response_data, status=200)
+
             # 상위 키워드로 DALL-E API 호출하여 스티커 이미지 생성
             sticker_image_urls = generate_sticker_images(top_keywords)
 
