@@ -15,7 +15,7 @@ class StaticImageView(APIView):
                          responses={200: StaticImageGetResponseSerializer})
     def get(request):
         try:
-            size = request.GET.get('size', 6)  # Default size : 6, 한 페이지 당 6개의 스티커 이미지
+            size = 6  # Default size : 6, 한 페이지 당 6개의 스티커 이미지
             page_number = request.GET.get('page', 1)
 
             paginator = Paginator(StaticImage.objects.all(), size)
