@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
 class StaticImageRequestSerializer(serializers.Serializer):
-    size = serializers.IntegerField()
     page = serializers.IntegerField()
 
 
