@@ -8,10 +8,10 @@ class MemberSerializer(serializers.Serializer):
     nickname = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
-    def create(self, validated_date):
-        login_id = validated_date.get('login_id')
-        nickname = validated_date.get('nickname')
-        password = validated_date.get('password')
+    def create(self, validated_data):
+        login_id = validated_data.get('login_id')
+        nickname = validated_data.get('nickname')
+        password = validated_data.get('password')
 
         try:
             member = Member(login_id=login_id, nickname=nickname, password=password)
@@ -29,6 +29,7 @@ class MemberSerializer(serializers.Serializer):
                 "status": 400,
                 "message": "이미 존재하는 로그인 ID입니다."
             }
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
