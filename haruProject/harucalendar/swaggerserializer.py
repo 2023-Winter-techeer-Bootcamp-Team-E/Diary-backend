@@ -2,9 +2,6 @@ from rest_framework import serializers
 
 
 class HarucalendarstickerSerializer(serializers.Serializer):
-    calendar_id = serializers.IntegerField()
-    member_id = serializers.IntegerField()
-    year_month = serializers.IntegerField()
     sticker_image_url = serializers.CharField()
     xcoor = serializers.IntegerField()
     ycoor = serializers.IntegerField()

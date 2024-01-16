@@ -60,6 +60,9 @@ services:
       - '80'
     #      - '443'
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    networks:
+      - haru
+
 
   backend:
     build:
@@ -107,7 +110,8 @@ services:
       - 15672:15672
     depends_on:
       - backend
-    restart: always   # restart: unless-stopped??
+    restart: always
+    tty: true   # restart: unless-stopped??
     expose:
       - 5672
     networks:
@@ -115,17 +119,19 @@ services:
 
   celery:
     container_name: celery
-    #    env_file:
-    #      - ./settings/.env
-    command: sh -c "celery -A config worker --loglevel=info"
+#    env_file:
+#      - ./settings/.env
+    command: sh -c "celery -A celery worker --loglevel=info"
     build:
-      context: ../backend
+      #context: ./backend
       dockerfile: Dockerfile
     environment:
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
     depends_on:
       - rabbitmq
       - backend
+    restart: always
+    tty: true
     networks:
       - haru
 
