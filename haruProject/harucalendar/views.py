@@ -58,8 +58,7 @@ class HarucalendarView(APIView):  # 캘린더 조회
                 'diary_id': items.diary_id,
                 'is_expiry': items.is_expiry,
                 'day': items.day,
-                'created_at': items.created_at,
-                'is_expired': items.is_expiry,
+                'created_at': items.created_at
             })
 
         # calendar_session_list = []
