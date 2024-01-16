@@ -16,8 +16,16 @@ class SignUpView(APIView):
         serializer = MemberSerializer(data=request.data)
         if serializer.is_valid():
             response_data = serializer.save()
-            return Response(response_data, status=201)
+            if response_data == {
+                "code": "M001",
+                "status": 201,
+                "message": "회원가입 완료"
+            }:
+                return Response(response_data, status=201)
+            else:
+                return Response(response_data, status=400)
         return Response(serializer.errors, status=400)
+
 
 
 class LogInView(APIView):
