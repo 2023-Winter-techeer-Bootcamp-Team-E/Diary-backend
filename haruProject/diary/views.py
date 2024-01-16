@@ -33,8 +33,8 @@ class Diaries(APIView):
         query_serializer=DiaryGetRequestSerializer,
         responses={200: DiaryGetResponseSerializer}
     )
-    def get(self, request, diary_id):
-
+    def get(self, request):
+        diary_id = request.GET.get('diary_id')
         found_diary = Diary.objects.get(diary_id=diary_id)
         try:
             serialized_diary = DiaryDetailSerializer(found_diary).data
@@ -77,11 +77,13 @@ class Diaries(APIView):
             diary_serializer = DiaryCreateSerializer(data=diary_data)
             if diary_serializer.is_valid():
                 diary_instance = diary_serializer.save(calendar=calendar_instance)
-                data = {"sns_link": f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"}
+                sns_link = f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"
+                data = {"sns_link": sns_link}
+                response_data = {"diary_id": diary_instance.diary_id, "sns_link": sns_link}
                 diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=data)
                 if diary_update_serializer.is_valid():
                     diary_update_serializer.save()
-                    return Response(diary_update_serializer.data, status=status.HTTP_200_OK)
+                    return Response(response_data, status=status.HTTP_200_OK)
                 else:
                     return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'snsLink가 유효하지 않습니다.'})
 
@@ -95,11 +97,13 @@ class Diaries(APIView):
             if diary_serializer.is_valid():
                 # calendar_instance = get_object_or_404(Harucalendar, calendar_id=calendar_id)
                 diary_instance = diary_serializer.save(calendar_id=calendar_id)
-                data = {"sns_link": f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"}
+                sns_link = f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"
+                data = {"sns_link": sns_link}
+                response_data = {"diary_id": diary_instance.diary_id, "sns_link": sns_link}
                 diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=data)
                 if diary_update_serializer.is_valid():
                     diary_update_serializer.save()
-                    return Response(diary_update_serializer.data, status=status.HTTP_200_OK)
+                    return Response(response_data, status=status.HTTP_200_OK)
                 else:
                     return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'snsLink가 유효하지 않습니다.'})
             else:
