@@ -1,2 +1,3 @@
 haruProject/db.sqlite3
 haruProject/Dockerfile
+**/migrations/

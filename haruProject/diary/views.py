@@ -33,8 +33,8 @@ class Diaries(APIView):
         query_serializer=DiaryGetRequestSerializer,
         responses={200: DiaryGetResponseSerializer}
     )
-    def get(self, request, diary_id):
-
+    def get(self, request):
+        diary_id = request.GET.get('diary_id')
         found_diary = Diary.objects.get(diary_id=diary_id)
         try:
             serialized_diary = DiaryDetailSerializer(found_diary).data
@@ -77,11 +77,13 @@ class Diaries(APIView):
             diary_serializer = DiaryCreateSerializer(data=diary_data)
             if diary_serializer.is_valid():
                 diary_instance = diary_serializer.save(calendar=calendar_instance)
-                data = {"sns_link": f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"}
+                sns_link = f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"
+                data = {"sns_link": sns_link}
+                response_data = {"diary_id": diary_instance.diary_id, "sns_link": sns_link}
                 diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=data)
                 if diary_update_serializer.is_valid():
                     diary_update_serializer.save()
-                    return Response(diary_update_serializer.data, status=status.HTTP_200_OK)
+                    return Response(response_data, status=status.HTTP_200_OK)
                 else:
                     return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'snsLink가 유효하지 않습니다.'})
 
@@ -95,11 +97,13 @@ class Diaries(APIView):
             if diary_serializer.is_valid():
                 # calendar_instance = get_object_or_404(Harucalendar, calendar_id=calendar_id)
                 diary_instance = diary_serializer.save(calendar_id=calendar_id)
-                data = {"sns_link": f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"}
+                sns_link = f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"
+                data = {"sns_link": sns_link}
+                response_data = {"diary_id": diary_instance.diary_id, "sns_link": sns_link}
                 diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=data)
                 if diary_update_serializer.is_valid():
                     diary_update_serializer.save()
-                    return Response(diary_update_serializer.data, status=status.HTTP_200_OK)
+                    return Response(response_data, status=status.HTTP_200_OK)
                 else:
                     return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'snsLink가 유효하지 않습니다.'})
             else:
@@ -234,6 +238,15 @@ class DiaryStickerManager(APIView):
             # comprehend 안들어가는 경우 예외 처리 필요****
             top_keywords = extract_top_keywords(content)
             print(top_keywords)
+
+            if not top_keywords:
+                response_data = {
+                    'code': 'D001',
+                    'status': '200',
+                    'message': '키워드가 생성되지 않았습니다.'
+                }
+                return Response(response_data, status=200)
+
             # 상위 키워드로 DALL-E API 호출하여 스티커 이미지 생성
             sticker_image_urls = generate_sticker_images(top_keywords)
 

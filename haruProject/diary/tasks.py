@@ -13,7 +13,7 @@ def generate_sticker_image(keyword):
 
     response = client.images.generate(
         model="dall-e-3",
-        prompt=f"{keyword}가 들어간 일러스트 느낌의 스티커",
+        prompt=f"일러스트 느낌의 {keyword} 스티커만 그려줘",
         size="1024x1024",
         quality="standard",
         n=1,
