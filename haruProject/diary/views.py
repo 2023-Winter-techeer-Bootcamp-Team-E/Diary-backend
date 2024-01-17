@@ -34,9 +34,11 @@ class Diaries(APIView):
         responses={200: DiaryGetResponseSerializer}
     )
     def get(self, request):
-        diary_id = request.GET.get('diary_id')
-        found_diary = Diary.objects.get(diary_id=diary_id)
         try:
+            day = request.GET.get('day') #swagger에서는 GET, postman은 data
+            calendar_id = request.session.get('calendar_id')
+            found_diary = Diary.objects.get(day=day, calendar_id=calendar_id)
+            request.session['diary_id'] = found_diary.diary_id
             serialized_diary = DiaryDetailSerializer(found_diary).data
             return Response(status=status.HTTP_200_OK, data=serialized_diary)
         except ObjectDoesNotExist:
@@ -123,8 +125,8 @@ class DiariesSave(APIView):
                          request_body=DiaryTextBoxPutRequestSerializer,
                          responses={200: 'DiaryTextBoxPutResponseSerializer'},
                          )
-    def put(self, request):
-        diary_id = request.data.get('diary_id')
+    def put(self, request): #캘린더 아디랑
+        diary_id = request.session.get('diary_id')
         if diary_id is None:
             return Response({"error": "diary does not exist"}, status=status.HTTP_400_BAD_REQUEST)
         if request.data is None:

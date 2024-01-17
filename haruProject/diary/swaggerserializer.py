@@ -2,9 +2,6 @@ from diary import serializers
 from rest_framework import serializers
 
 
-class DiaryGetRequestSerializer(serializers.Serializer):
-    diary_id = serializers.IntegerField(required=True)
-
 
 class DiaryTextBoxGetSerializer(serializers.Serializer):
     textbox_id = serializers.IntegerField()
@@ -45,7 +42,7 @@ class DiaryGetResponseSerializer(serializers.Serializer):
 
 
 class DiaryGetRequestSerializer(serializers.Serializer):
-    diary_id = serializers.IntegerField(required=True)
+    day = serializers.CharField(required=True)
 
 
 class DiaryLinkResponseSerializer(serializers.Serializer):
@@ -88,7 +85,6 @@ class StickerPutRequestSerializer(serializers.Serializer):
 
 
 class DiaryTextBoxPutRequestSerializer(serializers.Serializer):
-    day = serializers.CharField()
     textboxs = TextBoxPutRequestSerializer()
     stickers = StickerPutRequestSerializer()
 
