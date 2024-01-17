@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
+import member
 from member.models import Member
 from .models import Diary
 from .serializers import (DiaryDetailSerializer, DiarySnsLinkSerializer,
@@ -78,10 +79,16 @@ class Diaries(APIView):
 
             diary_serializer = DiaryCreateSerializer(data=diary_data)
             if diary_serializer.is_valid():
+                member_object = Member.objects.get(member_id=member_id)
                 diary_instance = diary_serializer.save(calendar=calendar_instance)
                 sns_link = f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"
                 data = {"sns_link": sns_link}
-                response_data = {"diary_id": diary_instance.diary_id, "sns_link": sns_link}
+                response_data = {
+                    "diary_id": diary_instance.diary_id,
+                    "sns_link": sns_link,
+                    "year_month": year_month,
+                    "day": day,
+                    "nickname": member_object.nickname}
                 diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=data)
                 if diary_update_serializer.is_valid():
                     diary_update_serializer.save()
@@ -98,10 +105,16 @@ class Diaries(APIView):
             diary_serializer = DiaryCreateSerializer(data=diary_data)
             if diary_serializer.is_valid():
                 # calendar_instance = get_object_or_404(Harucalendar, calendar_id=calendar_id)
+                member_object = Member.objects.get(member_id=member_id)
                 diary_instance = diary_serializer.save(calendar_id=calendar_id)
                 sns_link = f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"
                 data = {"sns_link": sns_link}
-                response_data = {"diary_id": diary_instance.diary_id, "sns_link": sns_link}
+                response_data = {
+                    "diary_id": diary_instance.diary_id,
+                    "year_month": year_month,
+                    "day": day,
+                    "nickname": member_object.nickname,
+                    "sns_link": sns_link}
                 diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=data)
                 if diary_update_serializer.is_valid():
                     diary_update_serializer.save()
@@ -207,6 +220,7 @@ class DiaryManager(APIView):
             sns_link = DiarySnsLinkSerializer(found_diary).data['sns_link']
             response_data = {
                 'diary_id': found_diary.diary_id,
+                'year_month': found_diary.year_month,
                 'day': found_diary.day,
                 'nickname': member_instance.nickname,
                 'sns_link': sns_link
