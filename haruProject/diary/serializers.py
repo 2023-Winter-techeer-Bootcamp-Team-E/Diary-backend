@@ -21,7 +21,7 @@ class DiaryDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Diary
-        fields = ['diary_id', 'year_month', 'diary_bg_url', 'is_expiry', 'diaryTextBoxs', 'diaryStickers']
+        fields = ['diary_id', 'year_month', 'diary_bg_id', 'is_expiry', 'diaryTextBoxs', 'diaryStickers']
 
 class DiarySnsLinkSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,7 +32,7 @@ class DiarySnsLinkSerializer(serializers.ModelSerializer):
 class DiaryCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Diary
-        fields = ['diary_bg_url', 'day', 'year_month']
+        fields = ['diary_bg_id', 'day', 'year_month']
 
     def create(self, validated_data):
         return Diary.objects.create(**validated_data)

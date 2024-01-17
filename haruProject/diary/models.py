@@ -10,7 +10,7 @@ class Diary(models.Model):
     year_month = models.CharField(max_length=10)  # 2021-08
     day = models.CharField(max_length=30)  # 2021-08-01
     sns_link = models.CharField(max_length=500, blank=True)
-    diary_bg_url = models.CharField(max_length=500)
+    diary_bg_id = models.CharField(max_length=10)
     is_expiry = models.BooleanField(default=False, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

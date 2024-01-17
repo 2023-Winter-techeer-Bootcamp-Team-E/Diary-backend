@@ -57,6 +57,7 @@ class Diaries(APIView):
         year_month = request.session.get('year_month')
         member_id = request.session.get('member_id')
         day = request.data.get('day')
+        diary_bg_id = request.data.get('diary_bg_id')
 
         if member_id is None:
             return Response({'error': '로그인이 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -75,7 +76,7 @@ class Diaries(APIView):
             else:
                 return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': '멤버와 캘린더 값이 유효하지 않습니다.'})
 
-            diary_data = {'diary_bg_url': "found_static_url", 'year_month': year_month, 'day': day}
+            diary_data = {'diary_bg_id': diary_bg_id, 'year_month': year_month, 'day': day}
 
             diary_serializer = DiaryCreateSerializer(data=diary_data)
             if diary_serializer.is_valid():
@@ -85,6 +86,7 @@ class Diaries(APIView):
                 data = {"sns_link": sns_link}
                 response_data = {
                     "diary_id": diary_instance.diary_id,
+                    "diary_bg_id": diary_instance.diary_bg_id,
                     "sns_link": sns_link,
                     "year_month": year_month,
                     "day": day,
@@ -101,7 +103,7 @@ class Diaries(APIView):
 
             if diary_exist:
                 return Response({'error': '해당 일에 이미 일기가 있습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-            diary_data = {'diary_bg_url': "found_static_url", 'year_month': year_month, 'day': day}
+            diary_data = {'diary_bg_id': diary_bg_id, 'year_month': year_month, 'day': day}
             diary_serializer = DiaryCreateSerializer(data=diary_data)
             if diary_serializer.is_valid():
                 # calendar_instance = get_object_or_404(Harucalendar, calendar_id=calendar_id)
@@ -111,6 +113,7 @@ class Diaries(APIView):
                 data = {"sns_link": sns_link}
                 response_data = {
                     "diary_id": diary_instance.diary_id,
+                    "diary_bg_id": diary_instance.diary_bg_id,
                     "year_month": year_month,
                     "day": day,
                     "nickname": member_object.nickname,

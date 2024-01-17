@@ -35,7 +35,7 @@ class SwaggerDiaryCreateResponseSerializer(serializers.Serializer):
 class DiaryGetResponseSerializer(serializers.Serializer):
     diary_id = serializers.IntegerField()
     day = serializers.IntegerField()
-    diary_bg_url = serializers.CharField()
+    diary_bg_id = serializers.CharField()
     is_expiry = serializers.BooleanField()
     diaryTextBoxs = DiaryTextBoxGetSerializer(many=True)
     diaryStickers = DiaryStickerGetSerializer(many=True)
