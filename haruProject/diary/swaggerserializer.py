@@ -45,10 +45,14 @@ class DiaryGetRequestSerializer(serializers.Serializer):
     day = serializers.CharField(required=True)
 
 
+class DiaryLinkRequestSerializer(serializers.Serializer):
+    day = serializers.CharField(required=True)
+
 class DiaryLinkResponseSerializer(serializers.Serializer):
     diary_id = serializers.IntegerField()
     day = serializers.IntegerField()
     sns_link = serializers.URLField()
+    nickname = serializers.CharField()
 
 
 class DiaryLinkGetResponseSerializer(serializers.Serializer):

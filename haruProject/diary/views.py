@@ -20,7 +20,7 @@ import time
 from .swaggerserializer import DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer, \
     DiaryTextBoxPutRequestSerializer, DiaryStickerRequestSerializer, \
     DiaryStickerGetResponseSerializer, SwaggerDiaryCreateRequestSerializer, SwaggerDiaryCreateResponseSerializer, \
-    DiaryGetRequestSerializer
+    DiaryGetRequestSerializer, DiaryLinkRequestSerializer
 
 
 # Create your views here.
@@ -191,14 +191,27 @@ class DiariesSave(APIView):
 
 # 일기장 링크공유
 class DiaryManager(APIView):
-    @swagger_auto_schema(responses={200: DiaryLinkGetResponseSerializer})
-    def get(self, request, diary_id):
-
-        found_diary = Diary.objects.get(diary_id=diary_id)
+    @staticmethod
+    @swagger_auto_schema(operation_summary="작성중인 일기 링크 조회",
+                         operation_description="작성중인 일기의 링크 및 diary_id, day, nickname, sns_lin 반환",
+                         query_serializer=DiaryLinkRequestSerializer,
+                         responses={200: DiaryLinkGetResponseSerializer})
+    def get(request):
+        calendar_id = request.session.get('calendar_id')
+        member_id = request.session.get('member_id')
+        day = request.GET.get('day')
 
         try:
-            sns_link = DiarySnsLinkSerializer(found_diary)
-            return Response(status=status.HTTP_200_OK, data=sns_link.data)
+            found_diary = Diary.objects.get(day=day, calendar_id=calendar_id)
+            member_instance = Member.objects.get(member_id=member_id)
+            sns_link = DiarySnsLinkSerializer(found_diary).data['sns_link']
+            response_data = {
+                'diary_id': found_diary.diary_id,
+                'day': found_diary.day,
+                'nickname': member_instance.nickname,
+                'sns_link': sns_link
+            }
+            return Response(response_data, status=200)
         except ObjectDoesNotExist:
             return Response({"error": "diary snsLink does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
