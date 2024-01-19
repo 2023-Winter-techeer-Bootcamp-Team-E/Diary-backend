@@ -9,6 +9,7 @@ from config.settings import DALLE_API_KEY
 
 @shared_task
 def generate_sticker_image(keyword):
+
     client = OpenAI(api_key=DALLE_API_KEY)
 
     response = client.images.generate(

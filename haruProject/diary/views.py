@@ -18,6 +18,7 @@ import boto3
 import uuid
 import time
 
+
 from .swaggerserializer import DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer, \
     DiaryTextBoxPutRequestSerializer, DiaryStickerRequestSerializer, \
     DiaryStickerGetResponseSerializer, SwaggerDiaryCreateRequestSerializer, SwaggerDiaryCreateResponseSerializer, \
@@ -281,7 +282,7 @@ class DiaryStickerManager(APIView):
 
             # 상위 키워드로 DALL-E API 호출하여 스티커 이미지 생성
             sticker_image_urls = generate_sticker_images(top_keywords)
-
+            print("dasda")
             # 이미지 업로드 및 URL 반환
             uploaded_image_urls = []
             for keyword, sticker_url in sticker_image_urls.items():

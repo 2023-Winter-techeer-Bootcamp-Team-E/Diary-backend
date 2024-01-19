@@ -49,6 +49,7 @@ class LogInView(APIView):
                 "code": "A001",
                 "status": 200,
                 "message": "로그인 성공",
+                "nickname": nickname
             }
             response_status = status.HTTP_200_OK
         else:
