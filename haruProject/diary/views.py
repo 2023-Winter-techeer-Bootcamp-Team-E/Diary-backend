@@ -63,6 +63,7 @@ class Diaries(APIView):
         calendar_id = request.session.get('calendar_id')
         year_month = request.session.get('year_month')
         member_id = request.session.get('member_id')
+        nickname = request.session.get('member_nickname')
         day = request.data.get('day')
         diary_bg_id = request.data.get('diary_bg_id')
 
@@ -89,18 +90,20 @@ class Diaries(APIView):
             if diary_serializer.is_valid():
                 member_object = Member.objects.get(member_id=member_id)
                 diary_instance = diary_serializer.save(calendar=calendar_instance)
-                sns_link = f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"
-                data = {"sns_link": sns_link}
-                response_data = {
-                    "diary_id": diary_instance.diary_id,
-                    "diary_bg_id": diary_instance.diary_bg_id,
-                    "sns_link": sns_link,
-                    "year_month": year_month,
-                    "day": day,
-                    "nickname": member_object.nickname}
-                diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=data)
+                # room_name = create_room(nickname, diary_instance.diary_id)
+                # if room_name is None:
+                #     return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'room_name이 유효하지 않습니다.'})
+                sns_data = {"sns_link": f"{request.get_host()}/ws/v1/harurooms/{diary_instance.diary_id}"}
+                diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=sns_data)
                 if diary_update_serializer.is_valid():
                     diary_update_serializer.save()
+                    response_data = {
+                        "diary_id": diary_instance.diary_id,
+                        "diary_bg_id": diary_instance.diary_bg_id,
+                        "sns_link": sns_data,
+                        "year_month": year_month,
+                        "day": day,
+                        "nickname": member_object.nickname}
                     return Response(response_data, status=status.HTTP_200_OK)
                 else:
                     return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'snsLink가 유효하지 않습니다.'})
@@ -113,33 +116,27 @@ class Diaries(APIView):
             diary_data = {'diary_bg_id': diary_bg_id, 'year_month': year_month, 'day': day}
             diary_serializer = DiaryCreateSerializer(data=diary_data)
             if diary_serializer.is_valid():
-                # calendar_instance = get_object_or_404(Harucalendar, calendar_id=calendar_id)
-                member_object = Member.objects.get(member_id=member_id)
                 diary_instance = diary_serializer.save(calendar_id=calendar_id)
-                sns_link = f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"
-                data = {"sns_link": sns_link}
-                response_data = {
-                    "diary_id": diary_instance.diary_id,
-                    "diary_bg_id": diary_instance.diary_bg_id,
-                    "year_month": year_month,
-                    "day": day,
-                    "nickname": member_object.nickname,
-                    "sns_link": sns_link}
-                diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=data)
+                # room_name = create_room(nickname, diary_instance.diary_id)
+                # if room_name is None:
+                #     return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'room_name이 유효하지 않습니다.'})
+                sns_data = {"sns_link": f"{request.get_host()}/ws/v1/harurooms/{diary_instance.diary_id}"}
+                diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=sns_data)
                 if diary_update_serializer.is_valid():
                     diary_update_serializer.save()
+                    response_data = {
+                        "diary_id": diary_instance.diary_id,
+                        "diary_bg_id": diary_instance.diary_bg_id,
+                        "year_month": year_month,
+                        "day": day,
+                        "nickname": nickname,
+                        "sns_link": sns_data}
                     return Response(response_data, status=status.HTTP_200_OK)
                 else:
                     return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'snsLink가 유효하지 않습니다.'})
             else:
                 return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': '일기 생성 데이터가 유효하지 않습니다..'})
 
-    def request_manager(request):
-        diary_bg_id = request.data.delete('diary_bg_id')
-        ### 일기장 배경 조회해오기 ###
-        request.data['diary_bg_url'] = "found_static_url"
-        return request
-        # 일기장 생성
 
 
 class DiariesSave(APIView):
