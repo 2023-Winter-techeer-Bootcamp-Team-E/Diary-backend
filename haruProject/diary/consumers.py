@@ -70,7 +70,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
             rotate = message['rotate']
             text = message['text']
             await self.channel_layer.group_send(
-                self.group_name,
+                self.room_name,
                 {
                     'type': 'text_input',
                     'x': x,
