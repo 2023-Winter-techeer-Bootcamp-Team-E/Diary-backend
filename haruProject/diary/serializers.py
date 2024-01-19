@@ -23,6 +23,7 @@ class DiaryDetailSerializer(serializers.ModelSerializer):
         model = Diary
         fields = ['diary_id', 'year_month', 'diary_bg_id', 'is_expiry', 'diaryTextBoxs', 'diaryStickers']
 
+
 class DiarySnsLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Diary
@@ -42,6 +43,7 @@ class DiaryTextBoxCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = DiaryTextBox
         fields = ['textbox_id', 'writer', 'content', 'xcoor', 'ycoor', 'width', 'height', 'rotate', 'content']
+
     def create(self, validated_data):
         return DiaryTextBox.objects.create(**validated_data)
 
@@ -55,7 +57,6 @@ class DiaryStickerCreateSerializer(serializers.ModelSerializer):
         return DiarySticker.objects.create(**validated_data)
 
 
-
 class DiaryUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Diary
@@ -65,5 +66,4 @@ class DiaryUpdateSerializer(serializers.ModelSerializer):
         instance.sns_link = validated_data.get('sns_link', instance.sns_link)
         instance.save()
         return instance
-
 

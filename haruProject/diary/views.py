@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from django.shortcuts import render
 
 import member
 from member.models import Member
@@ -25,6 +26,12 @@ from .swaggerserializer import DiaryGetResponseSerializer, DiaryLinkGetResponseS
 
 
 # Create your views here.
+
+
+def room(request, diaryid):
+
+    return render(request, "room.html", {"diaryid": diaryid})
+
 
 class Diaries(APIView):
     # 일기장 조회
