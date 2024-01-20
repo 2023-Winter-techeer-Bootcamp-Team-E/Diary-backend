@@ -48,16 +48,11 @@ class DiarySticker(models.Model):
 
 class HaruRoom(models.Model):
     room_id = models.AutoField(primary_key=True)
-    room_name = models.CharField(max_length=100)
+    user_count = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
     diary = models.OneToOneField(Diary, related_name='diary', on_delete=models.CASCADE)
 
-    @property
-    def diary_group_name(self):
-        return self.make_diary_group_name(room=self)
 
-    @staticmethod
-    def make_diary_group_name(room=None, room_pk=None):
-        return "room-%s" % (room_pk or room.pk)
+
