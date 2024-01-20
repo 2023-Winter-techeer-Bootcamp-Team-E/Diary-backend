@@ -93,7 +93,7 @@ class Diaries(APIView):
                 # room_name = create_room(nickname, diary_instance.diary_id)
                 # if room_name is None:
                 #     return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'room_name이 유효하지 않습니다.'})
-                sns_data = {"sns_link": f"{request.get_host()}/ws/v1/harurooms/{diary_instance.diary_id}"}
+                sns_data = {"sns_link": f"{request.get_host()}/ws/harurooms/{diary_instance.diary_id}"}
                 diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=sns_data)
                 if diary_update_serializer.is_valid():
                     diary_update_serializer.save()
@@ -120,7 +120,7 @@ class Diaries(APIView):
                 # room_name = create_room(nickname, diary_instance.diary_id)
                 # if room_name is None:
                 #     return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'room_name이 유효하지 않습니다.'})
-                sns_data = {"sns_link": f"{request.get_host()}/ws/v1/harurooms/{diary_instance.diary_id}"}
+                sns_data = {"sns_link": f"{request.get_host()}/ws/harurooms/{diary_instance.diary_id}"}
                 diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=sns_data)
                 if diary_update_serializer.is_valid():
                     diary_update_serializer.save()
