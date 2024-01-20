@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'storages',
     'static',
     'whitenoise',
+    'django_prometheus',
 
 ]
 
@@ -78,8 +79,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     'whitenoise.middleware.WhiteNoiseMiddleware',
-
-
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 
 ]
 
@@ -93,7 +94,7 @@ CORS_ORIGIN_WHITELIST = [
     "http://localhost:*"
 ]
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "host.docker.internal"]
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1",
@@ -106,10 +107,9 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-
 # SESSION_COOKIE_DOMAIN = "founderslooking.com"
 
-#SESSION_COOKIE_SECURE = False
+# SESSION_COOKIE_SECURE = False
 
 CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://127.0.0.1"]
 
@@ -148,7 +148,7 @@ DATABASES = {
         'PORT': '3306',
     }
 }
-#
+
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.sqlite3',
@@ -199,7 +199,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 DALLE_API_KEY = env('DALLE_API_KEY')
 
-
 # AWS S3 설정
 AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
@@ -216,12 +215,12 @@ AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_USE_SSL = True
 
 # Static files (CSS, JavaScript, images)
-#STATIC_URL = f"{AWS_S3_URL_PROTOCOL}://{AWS_S3_CUSTOM_DOMAIN}/static/"
-#STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# STATIC_URL = f"{AWS_S3_URL_PROTOCOL}://{AWS_S3_CUSTOM_DOMAIN}/static/"
+# STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # Media files (uploads)
-#DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-#MEDIA_URL = f"{AWS_S3_URL_PROTOCOL}://{AWS_S3_CUSTOM_DOMAIN}/media/"
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# MEDIA_URL = f"{AWS_S3_URL_PROTOCOL}://{AWS_S3_CUSTOM_DOMAIN}/media/"
 # SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 SWAGGER_SETTINGS = {
@@ -237,5 +236,3 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Seoul'
 CELERY_ENABLE_UTC = False
-
-
