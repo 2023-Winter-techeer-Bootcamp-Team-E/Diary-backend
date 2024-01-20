@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Diary, DiaryTextBox, DiarySticker
+from .models import Diary, DiaryTextBox, DiarySticker, HaruRoom
 
 
 class DiaryTextBoxSerializer(serializers.ModelSerializer):
@@ -66,4 +66,10 @@ class DiaryUpdateSerializer(serializers.ModelSerializer):
         instance.sns_link = validated_data.get('sns_link', instance.sns_link)
         instance.save()
         return instance
+
+
+class HaruRoomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HaruRoom
+        fields = ['room_id', 'user_count']
 
