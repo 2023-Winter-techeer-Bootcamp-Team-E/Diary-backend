@@ -9,6 +9,7 @@ from config.settings import DALLE_API_KEY
 
 @shared_task
 def generate_sticker_image(keyword):
+
     client = OpenAI(api_key=DALLE_API_KEY)
 
     response = client.images.generate(
@@ -27,7 +28,7 @@ def generate_sticker_image(keyword):
 def remove_background(image_data):
     with Image.open(BytesIO(image_data)) as img:
         # 이미지 크기 조절 - 프론트엔드와 API연결 후 로딩시간 체크한 뒤에 이미지 사이즈 조절하는 걸로
-        # img = img.resize((300, 300))
+        img = img.resize((300, 300))
 
         new_img = remove(img)
         output_buffer = BytesIO()

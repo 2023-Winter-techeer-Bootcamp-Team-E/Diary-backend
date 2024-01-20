@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
+import member
 from member.models import Member
 from .models import Diary
 from .serializers import (DiaryDetailSerializer, DiarySnsLinkSerializer,
@@ -17,10 +18,11 @@ import boto3
 import uuid
 import time
 
+
 from .swaggerserializer import DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer, \
     DiaryTextBoxPutRequestSerializer, DiaryStickerRequestSerializer, \
     DiaryStickerGetResponseSerializer, SwaggerDiaryCreateRequestSerializer, SwaggerDiaryCreateResponseSerializer, \
-    DiaryGetRequestSerializer
+    DiaryGetRequestSerializer, DiaryLinkRequestSerializer
 
 
 # Create your views here.
@@ -56,6 +58,7 @@ class Diaries(APIView):
         year_month = request.session.get('year_month')
         member_id = request.session.get('member_id')
         day = request.data.get('day')
+        diary_bg_id = request.data.get('diary_bg_id')
 
         if member_id is None:
             return Response({'error': '로그인이 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -74,14 +77,21 @@ class Diaries(APIView):
             else:
                 return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': '멤버와 캘린더 값이 유효하지 않습니다.'})
 
-            diary_data = {'diary_bg_url': "found_static_url", 'year_month': year_month, 'day': day}
+            diary_data = {'diary_bg_id': diary_bg_id, 'year_month': year_month, 'day': day}
 
             diary_serializer = DiaryCreateSerializer(data=diary_data)
             if diary_serializer.is_valid():
+                member_object = Member.objects.get(member_id=member_id)
                 diary_instance = diary_serializer.save(calendar=calendar_instance)
                 sns_link = f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"
                 data = {"sns_link": sns_link}
-                response_data = {"diary_id": diary_instance.diary_id, "sns_link": sns_link}
+                response_data = {
+                    "diary_id": diary_instance.diary_id,
+                    "diary_bg_id": diary_instance.diary_bg_id,
+                    "sns_link": sns_link,
+                    "year_month": year_month,
+                    "day": day,
+                    "nickname": member_object.nickname}
                 diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=data)
                 if diary_update_serializer.is_valid():
                     diary_update_serializer.save()
@@ -94,14 +104,21 @@ class Diaries(APIView):
 
             if diary_exist:
                 return Response({'error': '해당 일에 이미 일기가 있습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-            diary_data = {'diary_bg_url': "found_static_url", 'year_month': year_month, 'day': day}
+            diary_data = {'diary_bg_id': diary_bg_id, 'year_month': year_month, 'day': day}
             diary_serializer = DiaryCreateSerializer(data=diary_data)
             if diary_serializer.is_valid():
                 # calendar_instance = get_object_or_404(Harucalendar, calendar_id=calendar_id)
+                member_object = Member.objects.get(member_id=member_id)
                 diary_instance = diary_serializer.save(calendar_id=calendar_id)
                 sns_link = f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"
                 data = {"sns_link": sns_link}
-                response_data = {"diary_id": diary_instance.diary_id, "sns_link": sns_link}
+                response_data = {
+                    "diary_id": diary_instance.diary_id,
+                    "diary_bg_id": diary_instance.diary_bg_id,
+                    "year_month": year_month,
+                    "day": day,
+                    "nickname": member_object.nickname,
+                    "sns_link": sns_link}
                 diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=data)
                 if diary_update_serializer.is_valid():
                     diary_update_serializer.save()
@@ -191,14 +208,28 @@ class DiariesSave(APIView):
 
 # 일기장 링크공유
 class DiaryManager(APIView):
-    @swagger_auto_schema(responses={200: DiaryLinkGetResponseSerializer})
-    def get(self, request, diary_id):
-
-        found_diary = Diary.objects.get(diary_id=diary_id)
+    @staticmethod
+    @swagger_auto_schema(operation_summary="작성중인 일기 링크 조회",
+                         operation_description="작성중인 일기의 링크 및 diary_id, day, nickname, sns_lin 반환",
+                         query_serializer=DiaryLinkRequestSerializer,
+                         responses={200: DiaryLinkGetResponseSerializer})
+    def get(request):
+        calendar_id = request.session.get('calendar_id')
+        member_id = request.session.get('member_id')
+        day = request.GET.get('day')
 
         try:
-            sns_link = DiarySnsLinkSerializer(found_diary)
-            return Response(status=status.HTTP_200_OK, data=sns_link.data)
+            found_diary = Diary.objects.get(day=day, calendar_id=calendar_id)
+            member_instance = Member.objects.get(member_id=member_id)
+            sns_link = DiarySnsLinkSerializer(found_diary).data['sns_link']
+            response_data = {
+                'diary_id': found_diary.diary_id,
+                'year_month': found_diary.year_month,
+                'day': found_diary.day,
+                'nickname': member_instance.nickname,
+                'sns_link': sns_link
+            }
+            return Response(response_data, status=200)
         except ObjectDoesNotExist:
             return Response({"error": "diary snsLink does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -251,7 +282,6 @@ class DiaryStickerManager(APIView):
 
             # 상위 키워드로 DALL-E API 호출하여 스티커 이미지 생성
             sticker_image_urls = generate_sticker_images(top_keywords)
-
             # 이미지 업로드 및 URL 반환
             uploaded_image_urls = []
             for keyword, sticker_url in sticker_image_urls.items():
