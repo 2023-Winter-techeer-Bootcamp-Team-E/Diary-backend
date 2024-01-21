@@ -1,7 +1,7 @@
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
-from diary.models import HaruRoom, Diary
+from diary.models import HaruRoom, Diary, DiarySticker, DiaryTextBox
 from django.contrib.sessions.models import Session
 
 
@@ -43,13 +43,13 @@ class HaruConsumer(AsyncWebsocketConsumer):
         if not self.room_name or len(self.room_name) > 100:
             await self.close(code=400)
             return
+
         self.room = await self.get_or_create_room()
         # join room group
         await self.channel_layer.group_add(self.room_name, self.channel_name)
-
-        print("WebSocket connected:", self.channel_name)
-        print("User:", self.scope['user'])
-
+        await self.create_online_user()
+        if self.room.user_count > 5:
+            await self.close()
         await self.accept()
 
         # await self.send_user_list()
@@ -64,14 +64,6 @@ class HaruConsumer(AsyncWebsocketConsumer):
 
     async def websocket_receive(self, message):
         # = self.scope['user']
-        _type = message['type']  # chat.message, chat.url,
-        if _type == "image.dragdrop":
-            x = message['x']
-            y = message['y']
-            width = message['width']
-            height = message['height']
-            rotate = message['rotate']
-            image_id = message['image_id']
         data = json.loads(message['text'])
         _type = data['type']
 
@@ -83,27 +75,23 @@ class HaruConsumer(AsyncWebsocketConsumer):
             rotate = data['rotate']
             text = data['text']
             writer = data['writer']
+            text_box_id = data.get('text_box_id', None)
+            if text_box_id is None:
+                text_box_id = await self.save_textbox(x, y, width, height, rotate, text, writer)
             await self.channel_layer.group_send(
                 self.room_name,
                 {
-                    'type': 'image_dragdrop',
+                    'type': 'text_input',
                     'x': x,
                     'y': y,
                     'width': width,
                     'height': height,
                     'rotate': rotate,
-                    'image_id': image_id
                     'text': text,
                     'writer': writer,
+                    'text_box_id': text_box_id
                 }
             )
-        elif _type == "text.input":
-            x = message['x']
-            y = message['y']
-            width = message['width']
-            height = message['height']
-            rotate = message['rotate']
-            text = message['text']
         elif _type == "image_dragdrop":
             x = data['x']
             y = data['y']
@@ -111,6 +99,9 @@ class HaruConsumer(AsyncWebsocketConsumer):
             height = data['height']
             rotate = data['rotate']
             image_url = data['image_url']
+            image_box_id = data.get('image_box_id', None)
+            if image_box_id is None:
+                image_box_id = await self.save_image(x, y, width, height, rotate, image_url)
             await self.channel_layer.group_send(
                 self.room_name,
                 {
@@ -120,17 +111,15 @@ class HaruConsumer(AsyncWebsocketConsumer):
                     'width': width,
                     'height': height,
                     'rotate': rotate,
-                    'text': text
                     'image_url': image_url,
+                    'image_box_id': image_box_id
                 }
             )
 
-    async def image_dragdrop(self, event):
-        # Send the image dragdrop event to the WebSocket
+    async def text_input(self, event):
         await self.send(text_data=json.dumps(event))
 
-    async def text_input(self, event):
-        # Send the text input event to the WebSocket
+    async def image_dragdrop(self, event):  # save
         await self.send(text_data=json.dumps(event))
 
     # Receive message from WebSocket
@@ -143,11 +132,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
     # await self.close()
     @database_sync_to_async
     def get_or_create_room(self):
-        diary_instance = Diary.objects.get(diary_id=self.room_name)
         room, _ = HaruRoom.objects.get_or_create(diary_id=self.room_name)
-        haruroom_instance = HaruRoom.objects.get(diary_id=self.room_name)
-        print(diary_instance)
-        print(haruroom_instance)
         return room
 
     @database_sync_to_async
@@ -163,7 +148,6 @@ class HaruConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_user_count(self):
         user_count = self.room.user_count
-        print(user_count)
 
     @database_sync_to_async
     def remove_online_user(self):
@@ -174,3 +158,17 @@ class HaruConsumer(AsyncWebsocketConsumer):
             print(str(e))
             self.close()
             return None
+
+    @database_sync_to_async
+    def save_image(self, x, y, width, height, rotate, image_url):
+        image_box, _ = (DiarySticker.objects.get_or_create
+                        (diary_id=self.room_name, sticker_image_url=image_url, xcoor=x, ycoor=y, width=width,
+                         height=height, rotate=rotate))
+        return image_box.sticker_id
+
+    @database_sync_to_async
+    def save_textbox(self, x, y, width, height, rotate, text, writer):
+        textbox, _ = (DiaryTextBox.objects.get_or_create
+                      (diary_id=self.room_name, writer=writer, content=text, xcoor=x, ycoor=y, width=width,
+                       height=height, rotate=rotate))
+        return textbox.textbox_id
