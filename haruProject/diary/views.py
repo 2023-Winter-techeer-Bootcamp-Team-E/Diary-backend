@@ -139,7 +139,6 @@ class Diaries(APIView):
                 return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': '일기 생성 데이터가 유효하지 않습니다..'})
 
 
-
 class DiariesSave(APIView):
     @swagger_auto_schema(operation_description="일기 최종 저장",
                          operation_summary="기존 만들어진 일기에 일기 텍스트 박스 및 스티커 정보 저장",

@@ -21,9 +21,7 @@ from channels.security.websocket import AllowedHostsOriginValidator
 import diary.routing
 
 
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
-
 
 
 application = ProtocolTypeRouter(

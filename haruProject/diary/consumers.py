@@ -30,18 +30,16 @@ class HaruConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         # self.user = self.scope['user']
         self.room_name = self.scope['url_route']['kwargs']['diary_id']
-        session_key = self.scope['cookies'].get('sessionid')
-        if session_key:
-            session = await database_sync_to_async(Session.objects.get)(session_key=session_key)
-            member_id = session.get_decoded().get('member_id', None)
-            if member_id:
-                self.user = member_id
-            if member_id is None:
-                self.user = "AnonymousUser"
-            else:
-                return
-            await self.create_online_user()
-
+        # session_key = self.scope['cookies'].get('sessionid')
+        # if session_key:
+        #     session = await database_sync_to_async(Session.objects.get)(session_key=session_key)
+        #     member_id = session.get_decoded().get('member_id', None)
+        #     if member_id:
+        #         self.user = member_id
+        #     if member_id is None:
+        #         self.user = "AnonymousUser"
+        #     else:
+        #         return
         if not self.room_name or len(self.room_name) > 100:
             await self.close(code=400)
             return
@@ -65,8 +63,6 @@ class HaruConsumer(AsyncWebsocketConsumer):
         # await self.send_user_list()
 
     async def websocket_receive(self, message):
-        print("Received WebSocket message:", message)
-
         # = self.scope['user']
         _type = message['type']  # chat.message, chat.url,
         if _type == "image.dragdrop":
@@ -76,6 +72,17 @@ class HaruConsumer(AsyncWebsocketConsumer):
             height = message['height']
             rotate = message['rotate']
             image_id = message['image_id']
+        data = json.loads(message['text'])
+        _type = data['type']
+
+        if _type == "text_input":
+            x = data['x']
+            y = data['y']
+            width = data['width']
+            height = data['height']
+            rotate = data['rotate']
+            text = data['text']
+            writer = data['writer']
             await self.channel_layer.group_send(
                 self.room_name,
                 {
@@ -86,6 +93,8 @@ class HaruConsumer(AsyncWebsocketConsumer):
                     'height': height,
                     'rotate': rotate,
                     'image_id': image_id
+                    'text': text,
+                    'writer': writer,
                 }
             )
         elif _type == "text.input":
@@ -95,16 +104,24 @@ class HaruConsumer(AsyncWebsocketConsumer):
             height = message['height']
             rotate = message['rotate']
             text = message['text']
+        elif _type == "image_dragdrop":
+            x = data['x']
+            y = data['y']
+            width = data['width']
+            height = data['height']
+            rotate = data['rotate']
+            image_url = data['image_url']
             await self.channel_layer.group_send(
                 self.room_name,
                 {
-                    'type': 'text_input',
+                    'type': 'image_dragdrop',
                     'x': x,
                     'y': y,
                     'width': width,
                     'height': height,
                     'rotate': rotate,
                     'text': text
+                    'image_url': image_url,
                 }
             )
 
