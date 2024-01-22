@@ -50,7 +50,9 @@ class HaruConsumer(AsyncWebsocketConsumer):
         await self.create_online_user()
         if self.room.user_count > 5:
             await self.close()
+
         await self.accept()
+        await self.send_user_count()
 
         # await self.send_user_list()
         # 각 애플리케이션 인스턴스는 단일 소비자 인스턴스를 생성, -> self.channel_name
@@ -60,6 +62,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
         # Leave room group
         await self.channel_layer.group_discard(self.room_name, self.channel_name)
         await self.remove_online_user()
+        await self.room.get_user_count()
         # await self.send_user_list()
 
     async def websocket_receive(self, message):
@@ -75,9 +78,9 @@ class HaruConsumer(AsyncWebsocketConsumer):
             rotate = data['rotate']
             text = data['text']
             writer = data['writer']
-            text_box_id = data.get('text_box_id', None)
-            if text_box_id is None:
-                text_box_id = await self.save_textbox(x, y, width, height, rotate, text, writer)
+            # text_box_id = data.get('text_box_id', None)
+            # if text_box_id is None:
+            #     text_box_id = await self.save_textbox(x, y, width, height, rotate, text, writer)
             await self.channel_layer.group_send(
                 self.room_name,
                 {
@@ -89,37 +92,105 @@ class HaruConsumer(AsyncWebsocketConsumer):
                     'rotate': rotate,
                     'text': text,
                     'writer': writer,
-                    'text_box_id': text_box_id
+                    # 'text_box_id': text_box_id
                 }
             )
-        elif _type == "image_dragdrop":
-            x = data['x']
-            y = data['y']
-            width = data['width']
-            height = data['height']
-            rotate = data['rotate']
-            image_url = data['image_url']
-            image_box_id = data.get('image_box_id', None)
-            if image_box_id is None:
-                image_box_id = await self.save_image(x, y, width, height, rotate, image_url)
+        elif _type == "image_drag":
+            drag_data = data['drag']
+            width2 = drag_data['width2']
+            height2 = drag_data['height2']
+            top2 = drag_data['top2']
+            left2 = drag_data['left2']
+            rotate2 = drag_data['rotate2']
+            # image_box_id = data.get('image_box_id', None)
+            # if image_box_id is None:
+            #     image_box_id = await self.save_image(x, y, width, height, rotate, image_url)
             await self.channel_layer.group_send(
                 self.room_name,
                 {
-                    'type': 'image_dragdrop',
-                    'x': x,
-                    'y': y,
-                    'width': width,
-                    'height': height,
-                    'rotate': rotate,
-                    'image_url': image_url,
-                    'image_box_id': image_box_id
+                    'type': 'image_drag',
+                    'drag': {
+                        'width2': width2,
+                        'height2': height2,
+                        'top2': top2,
+                        'left2': left2,
+                        'rotate2': rotate2,
+                    },            # 'image_box_id': image_box_id
                 }
             )
+        elif _type == "image_resize":
+            resize_data = data['resize']
+            width2 = resize_data['width2']
+            height2 = resize_data['height2']
+            top2 = resize_data['top2']
+            left2 = resize_data['left2']
+            rotate2 = resize_data['rotate2']
+            # image_box_id = data.get('image_box_id', None)
+            # if image_box_id is None:
+            #     image_box_id = await self.save_image(x, y, width, height, rotate, image_url)
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    'type': 'image_drag',
+                    'resize': {
+                        'width2': width2,
+                        'height2': height2,
+                        'top2': top2,
+                        'left2': left2,
+                        'rotate2': rotate2,
+                    },  # 'image_box_id': image_box_id
+                }
+            )
+        elif _type == "image_rotate":
+            rotate_data = data['rotate']
+            width2 = rotate_data['width2']
+            height2 = rotate_data['height2']
+            top2 = rotate_data['top2']
+            left2 = rotate_data['left2']
+            rotate2 = rotate_data['rotate2']
+            # image_box_id = data.get('image_box_id', None)
+            # if image_box_id is None:
+            #     image_box_id = await self.save_image(x, y, width, height, rotate, image_url)
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    'type': 'image_rotate',
+                    'rotate': {
+                        'width2': width2,
+                        'height2': height2,
+                        'top2': top2,
+                        'left2': left2,
+                        'rotate2': rotate2,
+                    },  # 'image_box_id': image_box_id
+                }
+            )
+
+    async def send_user_count(self):
+        user_count = self.room.user_count
+        await self.channel_layer.group_send(
+            self.room_name,
+            {
+                'type': 'user_count',
+                'user_count': user_count
+            }
+        )
 
     async def text_input(self, event):
         await self.send(text_data=json.dumps(event))
 
-    async def image_dragdrop(self, event):  # save
+    async def image_drag(self, event):  # save
+        await self.send(text_data=json.dumps(event))
+
+    async def image_rotate(self, event):  # save
+        await self.send(text_data=json.dumps(event))
+
+    async def image_resize(self, event):  # save
+        await self.send(text_data=json.dumps(event))
+
+    async def send_static_image(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def user_count(self, event):
         await self.send(text_data=json.dumps(event))
 
     # Receive message from WebSocket
@@ -130,6 +201,10 @@ class HaruConsumer(AsyncWebsocketConsumer):
     #     # Send message to WebSocket
     #     await self.send(text_data=json.dumps({'message': message}))
     # await self.close()
+
+    def get_user_count(self):
+        return self.room.user_count
+
     @database_sync_to_async
     def get_or_create_room(self):
         room, _ = HaruRoom.objects.get_or_create(diary_id=self.room_name)
@@ -145,9 +220,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
             self.close()
             return None
 
-    @database_sync_to_async
-    def get_user_count(self):
-        user_count = self.room.user_count
+    # @database_sync_to_async
 
     @database_sync_to_async
     def remove_online_user(self):
