@@ -14,7 +14,7 @@ def generate_sticker_image(keyword):
 
     response = client.images.generate(
         model="dall-e-3",
-        prompt=f"일러스트 느낌의 {keyword} 스티커만 그려줘",
+        prompt=f"please do not provide multiple stickers in sticker pack format. Create a {keyword} sticker that is unique,cute and has an illustrative feel. The sticker should not include any text or characters, and the design should avoid incorporating regional or personal names. Ensure that everything except the sticker is transparent. Lastly, .",
         size="1024x1024",
         quality="standard",
         n=1,
