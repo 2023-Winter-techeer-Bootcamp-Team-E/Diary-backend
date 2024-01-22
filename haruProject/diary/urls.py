@@ -1,7 +1,12 @@
-from django.urls import path
+from django.urls import path # , re_path
 
-from . import views
+from . import views, consumers
 from .views import DiaryManager, DiaryStickerManager, Diaries, DiariesSave
+
+#
+# websocket_urlpatterns = [
+#     re_path(r'ws/harurooms/(?P<diary_id>\w+)/$', consumers.HaruConsumer.as_asgi()),
+#     ]
 
 urlpatterns = [
     path('', Diaries.as_view(), name='diaries'),

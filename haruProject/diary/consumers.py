@@ -62,7 +62,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
         # Leave room group
         await self.channel_layer.group_discard(self.room_name, self.channel_name)
         await self.remove_online_user()
-        await self.room.get_user_count()
+        await self.send_user_count()
         # await self.send_user_list()
 
     async def websocket_receive(self, message):
@@ -97,71 +97,79 @@ class HaruConsumer(AsyncWebsocketConsumer):
             )
         elif _type == "image_drag":
             drag_data = data['drag']
-            width2 = drag_data['width2']
-            height2 = drag_data['height2']
-            top2 = drag_data['top2']
-            left2 = drag_data['left2']
-            rotate2 = drag_data['rotate2']
-            # image_box_id = data.get('image_box_id', None)
-            # if image_box_id is None:
-            #     image_box_id = await self.save_image(x, y, width, height, rotate, image_url)
+            width = drag_data['width2']
+            height = drag_data['height2']
+            top = drag_data['top2']
+            left = drag_data['left2']
+            rotate = drag_data['rotate2']
+            image_url = drag_data['image_url']
+            image_box_id = data.get('image_box_id', None)
+            if image_box_id is None:
+                image_box_id = await self.save_image(width, height, top, left, rotate, image_url)
             await self.channel_layer.group_send(
                 self.room_name,
                 {
                     'type': 'image_drag',
                     'drag': {
-                        'width2': width2,
-                        'height2': height2,
-                        'top2': top2,
-                        'left2': left2,
-                        'rotate2': rotate2,
+                        'width2': width,
+                        'height2': height,
+                        'top2': top,
+                        'left2': left,
+                        'rotate2': rotate,
+                        'image_url': image_url,
+                        'image_box_id': image_box_id
                     },            # 'image_box_id': image_box_id
                 }
             )
         elif _type == "image_resize":
             resize_data = data['resize']
-            width2 = resize_data['width2']
-            height2 = resize_data['height2']
-            top2 = resize_data['top2']
-            left2 = resize_data['left2']
-            rotate2 = resize_data['rotate2']
-            # image_box_id = data.get('image_box_id', None)
-            # if image_box_id is None:
-            #     image_box_id = await self.save_image(x, y, width, height, rotate, image_url)
+            width = resize_data['width2']
+            height = resize_data['height2']
+            top = resize_data['top2']
+            left = resize_data['left2']
+            rotate = resize_data['rotate2']
+            image_url = resize_data['image_url']
+            image_box_id = data.get('image_box_id', None)
+            if image_box_id is None:
+                image_box_id = await self.save_image(width, height, top, left, rotate, image_url)
             await self.channel_layer.group_send(
                 self.room_name,
                 {
                     'type': 'image_resize',
                     'resize': {
-                        'width2': width2,
-                        'height2': height2,
-                        'top2': top2,
-                        'left2': left2,
-                        'rotate2': rotate2,
-                    },  # 'image_box_id': image_box_id
+                        'width2': width,
+                        'height2': height,
+                        'top2': top,
+                        'left2': left,
+                        'rotate2': rotate,
+                        'image_url': image_url,
+                        'image_box_id': image_box_id
+                    },
                 }
             )
         elif _type == "image_rotate":
             rotate_data = data['rotate']
-            width2 = rotate_data['width2']
-            height2 = rotate_data['height2']
-            top2 = rotate_data['top2']
-            left2 = rotate_data['left2']
-            rotate2 = rotate_data['rotate2']
-            # image_box_id = data.get('image_box_id', None)
-            # if image_box_id is None:
-            #     image_box_id = await self.save_image(x, y, width, height, rotate, image_url)
+            width = rotate_data['width2']
+            height = rotate_data['height2']
+            top = rotate_data['top2']
+            left = rotate_data['left2']
+            rotate = rotate_data['rotate2']
+            image_url = rotate_data['image_url']
+            image_box_id = data.get('image_box_id', None)
+            if image_box_id is None:
+                image_box_id = await self.save_image(width, height, top, left, rotate, image_url)
             await self.channel_layer.group_send(
                 self.room_name,
                 {
                     'type': 'image_rotate',
                     'rotate': {
-                        'width2': width2,
-                        'height2': height2,
-                        'top2': top2,
-                        'left2': left2,
-                        'rotate2': rotate2,
-                    },  # 'image_box_id': image_box_id
+                        'width2': width,
+                        'height2': height,
+                        'top2': top,
+                        'left2': left,
+                        'rotate2': rotate,
+                        'image_box_id': image_box_id
+                    },
                 }
             )
 
@@ -233,9 +241,10 @@ class HaruConsumer(AsyncWebsocketConsumer):
             return None
 
     @database_sync_to_async
-    def save_image(self, x, y, width, height, rotate, image_url):
+    def save_image(self, width, height, top, left, rotate, image_url):
+        image_url = 'uurrrlll'
         image_box, _ = (DiarySticker.objects.get_or_create
-                        (diary_id=self.room_name, sticker_image_url=image_url, xcoor=x, ycoor=y, width=width,
+                        (diary_id=self.room_name, sticker_image_url=image_url, xcoor=top, ycoor=left, width=width,
                          height=height, rotate=rotate))
         return image_box.sticker_id
 
