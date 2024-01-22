@@ -172,6 +172,32 @@ class HaruConsumer(AsyncWebsocketConsumer):
                     },
                 }
             )
+        elif _type == "create_sticker":
+            image_data = data['image']
+            width = image_data['width']
+            height = image_data['height']
+            top = image_data['top']
+            left = image_data['left']
+            rotate = image_data['rotate']
+            image_url = image_data['image_url']
+            image_box_id = data.get('sticker_id', None)
+            if image_box_id is None:
+                image_box_id = await self.save_image(width, height, top, left, rotate, image_url)
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    'type': 'create_sticker',
+                    'image': {
+                        'width': width,
+                        'height': height,
+                        'top': top,
+                        'left': left,
+                        'rotate': rotate,
+                        'image_url': image_url,
+                        'image_box_id': image_box_id
+                    },
+                }
+            )
 
     async def send_user_count(self):
         user_count = self.room.user_count
@@ -193,6 +219,9 @@ class HaruConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(event))
 
     async def image_resize(self, event):  # save
+        await self.send(text_data=json.dumps(event))
+
+    async def create_sticker(self, event):
         await self.send(text_data=json.dumps(event))
 
     async def send_static_image(self, event):
