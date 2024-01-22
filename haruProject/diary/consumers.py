@@ -131,7 +131,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_send(
                 self.room_name,
                 {
-                    'type': 'image_drag',
+                    'type': 'image_resize',
                     'resize': {
                         'width2': width2,
                         'height2': height2,
