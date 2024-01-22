@@ -99,6 +99,7 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1", "host.docker.internal"]
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1",
+    "https://www.haruconnection.store"
 ]
 CORS_ALLOW_CREDENTIALS = True
 SESSION_COOKIE_HTTPONLY = True
