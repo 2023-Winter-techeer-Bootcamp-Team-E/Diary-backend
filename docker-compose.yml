@@ -50,6 +50,7 @@ services:
     #      - "443:443"
     volumes:
       - build_folder:/var/www/frontend
+      - ./nginx/logs:/var/log/nginx
 
     #      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
     #      - ./certbot/conf:/etc/letsencrypt:rw
