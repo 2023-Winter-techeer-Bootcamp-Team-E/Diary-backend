@@ -73,6 +73,7 @@ class DiaryTextBoxPostResponseSerializer(serializers.Serializer):
 
 class TextBoxPutRequestSerializer(serializers.Serializer):
     writer = serializers.CharField()
+    content = serializers.CharField()
     xcoor = serializers.IntegerField()
     ycoor = serializers.IntegerField()
     height = serializers.IntegerField()
@@ -89,8 +90,8 @@ class StickerPutRequestSerializer(serializers.Serializer):
 
 
 class DiaryTextBoxPutRequestSerializer(serializers.Serializer):
-    textboxs = TextBoxPutRequestSerializer()
-    stickers = StickerPutRequestSerializer()
+    textboxs = TextBoxPutRequestSerializer(many=True)
+    stickers = StickerPutRequestSerializer(many=True)
 
 
 class DiaryTextBoxPutResponseSerializer(serializers.Serializer):

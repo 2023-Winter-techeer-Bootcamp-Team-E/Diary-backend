@@ -99,6 +99,7 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1", "host.docker.internal"]
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1",
+    "https://www.haruconnection.store"
 ]
 CORS_ALLOW_CREDENTIALS = True
 SESSION_COOKIE_HTTPONLY = True
@@ -156,6 +157,13 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+#
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
