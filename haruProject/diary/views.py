@@ -83,6 +83,8 @@ class Diaries(APIView):
             if diary_serializer.is_valid():
                 member_object = Member.objects.get(member_id=member_id)
                 diary_instance = diary_serializer.save(calendar=calendar_instance)
+                request.session['diary_id'] = diary_instance.diary_id
+
                 sns_link = f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"
                 data = {"sns_link": sns_link}
                 response_data = {
@@ -110,6 +112,9 @@ class Diaries(APIView):
                 # calendar_instance = get_object_or_404(Harucalendar, calendar_id=calendar_id)
                 member_object = Member.objects.get(member_id=member_id)
                 diary_instance = diary_serializer.save(calendar_id=calendar_id)
+                request.session['diary_id'] = diary_instance.diary_id
+
+
                 sns_link = f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"
                 data = {"sns_link": sns_link}
                 response_data = {
