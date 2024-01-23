@@ -198,6 +198,19 @@ class HaruConsumer(AsyncWebsocketConsumer):
                     },
                 }
             )
+        elif _type == "delete_object":
+            object_type = data['object_type']
+            object_id = data['object_id']
+            deleted = await self.delete_box(object_id, object_type)
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    'type': 'delete_object',
+                    'object_type': object_type,
+                    'object_id': object_id,
+                    'message': deleted
+                }
+            )
 
     async def send_user_count(self):
         user_count = self.room.user_count
@@ -229,6 +242,15 @@ class HaruConsumer(AsyncWebsocketConsumer):
 
     async def user_count(self, event):
         await self.send(text_data=json.dumps(event))
+
+    async def delete_object(self, event):
+        object_type = event['object_type']
+        object_id = event['object_id']
+        await self.send(text_data=json.dumps({
+            'type': 'delete_object',
+            'object_type': object_type,
+            'object_id': object_id,
+        }))
 
     # Receive message from WebSocket
 
@@ -283,3 +305,11 @@ class HaruConsumer(AsyncWebsocketConsumer):
                       (diary_id=self.room_name, writer=writer, content=text, xcoor=x, ycoor=y, width=width,
                        height=height, rotate=rotate))
         return textbox.textbox_id
+
+    @database_sync_to_async
+    def delete_box(self, box_id, box_type):
+        if box_type == 'image':
+            DiarySticker.objects.filter(sticker_id=box_id).delete()
+        if box_type == 'textbox':
+            DiaryTextBox.objects.filter(textbox_id=box_id).delete()
+        return f'{box_type} {box_id} deleted'
