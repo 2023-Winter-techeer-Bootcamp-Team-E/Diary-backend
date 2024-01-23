@@ -22,7 +22,7 @@ import time
 from .swaggerserializer import DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer, \
     DiaryTextBoxPutRequestSerializer, DiaryStickerRequestSerializer, \
     DiaryStickerGetResponseSerializer, SwaggerDiaryCreateRequestSerializer, SwaggerDiaryCreateResponseSerializer, \
-    DiaryGetRequestSerializer, DiaryLinkRequestSerializer
+    DiaryGetRequestSerializer, DiaryLinkRequestSerializer, DiaryTextBoxPutResponseSerializer
 
 
 # Create your views here.
@@ -140,7 +140,7 @@ class DiariesSave(APIView):
     @swagger_auto_schema(operation_description="일기 최종 저장",
                          operation_summary="기존 만들어진 일기에 일기 텍스트 박스 및 스티커 정보 저장",
                          request_body=DiaryTextBoxPutRequestSerializer,
-                         responses={200: 'DiaryTextBoxPutResponseSerializer'},
+                         responses={200: DiaryTextBoxPutResponseSerializer},
                          )
     def put(self, request): #캘린더 아디랑
         diary_id = request.session.get('diary_id')
