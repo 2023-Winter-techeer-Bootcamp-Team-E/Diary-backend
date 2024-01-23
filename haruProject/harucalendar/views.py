@@ -20,27 +20,25 @@ class HarucalendarView(APIView):  # 캘린더 조회
     @swagger_auto_schema(
         operation_description="1.켈린더 조회 시 해당하는 캘린더가 없으면 없다고 반환(생성은X).<br>2.해당하는 캘린더가 있을 시, 해당하는 달에 있는 다이어리를 보여줌(작성유무,"
                               "다이어리id)<br>3.다이어리의 상세한 내용은 다이어리 "
-                              "조회로.<br>3.입력예시:http://127.0.0.1:8000/api/v1/calendars/1?year_month=202401)"
                               "<br>캘린더 조회 시 세션에 calendar_id, year_month 저장",
         operation_summary="켈린더 조회",
         query_serializer=HarucalendarRequestSerializer,
         responses={200: HarucalendarGetResponseSerializer})
     def get(self, request):
         try:
-            year_month = request.GET.get('year_month') #postman에서는 data, swagger는 GET
-            print(year_month)
+            year_month = request.GET.get('year_month')  # postman에서는 data, swagger는 GET
             member_id = request.session['member_id']
             request.session['year_month'] = year_month
-            harucalendar = Harucalendar.objects.get(member=member_id, year_month=year_month)
-            request.session['calendar_id'] = harucalendar.calendar_id
+            harucalendar_instance = Harucalendar.objects.get(member=member_id, year_month=year_month)
+            request.session['calendar_id'] = harucalendar_instance.calendar_id
 
         except ObjectDoesNotExist:
             request.session['calendar_id'] = None
             return Response({'message': '달력이 존재하지 않습니다.'},
                             status=status.HTTP_404_NOT_FOUND)
 
-        diary = Diary.objects.filter(calendar=harucalendar.calendar_id)
-        calendar_stickers = Harucalendarsticker.objects.filter(calendar=harucalendar.calendar_id)
+        diary = Diary.objects.filter(calendar=harucalendar_instance.calendar_id)
+        calendar_stickers = Harucalendarsticker.objects.filter(calendar=harucalendar_instance.calendar_id)
         diary_list = []
         calendar_sticker_list = []
         for items in calendar_stickers:
@@ -61,8 +59,7 @@ class HarucalendarView(APIView):  # 캘린더 조회
                 'created_at': items.created_at
             })
 
-
-        harucalendarserializer = HarucalendarAllSerializer(harucalendar)  # 캘린더 시리얼라이징
+        harucalendarserializer = HarucalendarAllSerializer(harucalendar_instance)  # 캘린더 시리얼라이징
         request.session['calendar_id'] = harucalendarserializer.data['calendar_id']
 
         return Response({
@@ -86,22 +83,23 @@ class HarucalendarstickerView(APIView):
             calendar_id = request.session.get('calendar_id')
             year_month = request.session.get('year_month')
             stickers_data = request.data.get('stickers', [])
-            print(calendar_id,year_month)
-
+            print(calendar_id)
             for sticker_data in stickers_data:
-
+                print("tq")
                 if calendar_id is None:
                     member_instance = get_object_or_404(Member, member_id=member_id)
                     calendar_serializer = HarucalendarCreateSerializer(data={"year_month": year_month})
                     if calendar_serializer.is_valid():
-                        new_calendar_id = calendar_serializer.save(member=member_instance).calendar_id
-                        print(new_calendar_id)
-                        new_harucalendar_instance = get_object_or_404(Harucalendar, calendar_id=new_calendar_id)
+                        new_calendar_instance = calendar_serializer.save(member=member_instance)
+                        new_calendar_id = new_calendar_instance.calendar_id
                         sticker_serializer = HarucalendarStickerCreateSerializer(data=sticker_data)
                         if sticker_serializer.is_valid():
-                            sticker_serializer.save(calendar=new_harucalendar_instance)
-                            request.session['calendar_id'] = new_calendar_id
+                            sticker_serializer.save(calendar=new_calendar_instance)
+                        else:
+                            print(sticker_serializer.errors)
+
                     else:
+                        print(calendar_serializer.errors)
                         return Response(status=status.HTTP_400_BAD_REQUEST)
 
                 else:
@@ -111,13 +109,14 @@ class HarucalendarstickerView(APIView):
                     if sticker_serializer.is_valid():
                         sticker_serializer.save(calendar=harucalendar_instance)
                     else:
+                        print(sticker_serializer.errors)
                         return Response(status=status.HTTP_400_BAD_REQUEST)
 
         except ObjectDoesNotExist:
             return Response({'error': '켈린더가 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
 
         if calendar_id is None:
-            print(calendar_id,new_calendar_id)
+            print(calendar_id, new_calendar_id)
             return Response(
                 {'calendar_id': new_calendar_id, 'year_month': year_month, 'code': 'c002', 'status': '200',
                  'message': '스티커 추가 성공'}, status=status.HTTP_200_OK)
@@ -126,20 +125,18 @@ class HarucalendarstickerView(APIView):
                 {'calendar_id': calendar_id, 'year_month': year_month, 'code': 'c002', 'status': '200',
                  'message': '스티커 추가 성공'}, status=status.HTTP_200_OK)
 
-
-
     # calendar_session_list = []
-        # for item in Diary.objects.all():
-        #     diary_textboxes = item.diaryTextBoxs.all()
-        #
-        #     calendar_session_list.append({
-        #         'diary_date': item.diary_date,  # DiaryTextBox 모델의 diary_date 가져오기
-        #         'is_expird': item.is_expiry,
-        #         'day': item.diary_day,
-        #         'diary_textboxes': [{'writer': textbox.writer, 'content': textbox.content} for textbox in
-        #                             diary_textboxes]
-        #     })
-        # request.session['calendar_session_list'] = calendar_session_list
-        # session checking
-        # for key, value in request.session.items():
-        #     print(f'세션 키: {key}, 세션 값: {value}')
+    # for item in Diary.objects.all():
+    #     diary_textboxes = item.diaryTextBoxs.all()
+    #
+    #     calendar_session_list.append({
+    #         'diary_date': item.diary_date,  # DiaryTextBox 모델의 diary_date 가져오기
+    #         'is_expird': item.is_expiry,
+    #         'day': item.diary_day,
+    #         'diary_textboxes': [{'writer': textbox.writer, 'content': textbox.content} for textbox in
+    #                             diary_textboxes]
+    #     })
+    # request.session['calendar_session_list'] = calendar_session_list
+    # session checking
+    # for key, value in request.session.items():
+    #     print(f'세션 키: {key}, 세션 값: {value}')
