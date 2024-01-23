@@ -41,7 +41,7 @@ class DiaryCreateSerializer(serializers.ModelSerializer):
 class DiaryTextBoxCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = DiaryTextBox
-        fields = ['textbox_id', 'writer', 'content', 'xcoor', 'ycoor', 'width', 'height', 'rotate', 'content']
+        fields = ['writer', 'content', 'xcoor', 'ycoor', 'width', 'height', 'rotate']
     def create(self, validated_data):
         return DiaryTextBox.objects.create(**validated_data)
 
