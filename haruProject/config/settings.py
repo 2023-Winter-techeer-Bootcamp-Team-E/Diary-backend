@@ -137,7 +137,7 @@ ASGI_APPLICATION = 'config.asgi.application'
 # CHHANNEL_LAYERS = {
 #
 WSGI_APPLICATION = 'config.wsgi.application'
-
+#
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 # DATABASES = {
@@ -155,15 +155,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
-    }
+        }
 }
-#
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -270,6 +264,24 @@ LOGGING = {
             'class': "logging.FileHandler",
             'filename': os.path.join(BASE_DIR, 'logs') + "/member_log"
         },
+        'calendar_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs') + "/calendar_log"
+
+        },
+        'diary_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs') + "/diary_log"
+
+        },
+        'static_file':{
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs') + "/static_log"
+
+        },
 
     },
     'loggers': {
@@ -282,6 +294,23 @@ LOGGING = {
             'handlers': ['member_file'],  # 다른 app을 생성 후 해당 app에서도
             'propagate': True,
             'level': 'INFO',  # 사용하고자 할 경우 해당 app 이름으로
-        },  # 좌측 코드를 추가 작성해서 사용
+        },
+        'harucalendar': {  # Project에서 생성한 app의 이름
+            'handlers': ['calendar_file'],  # 다른 app을 생성 후 해당 app에서도
+            'propagate': True,
+            'level': 'INFO',  # 사용하고자 할 경우 해당 app 이름으로
+        },
+        'diary': {  # Project에서 생성한 app의 이름
+            'handlers': ['diary_file'],  # 다른 app을 생성 후 해당 app에서도
+            'propagate': True,
+            'level': 'INFO',  # 사용하고자 할 경우 해당 app 이름으로
+        },
+        'static': {  # Project에서 생성한 app의 이름
+            'handlers': ['static_file'],  # 다른 app을 생성 후 해당 app에서도
+            'propagate': True,
+            'level': 'INFO',  # 사용하고자 할 경우 해당 app 이름으로
+        },
+        # 좌측 코드를 추가 작성해서 사용
     }
 }
+
