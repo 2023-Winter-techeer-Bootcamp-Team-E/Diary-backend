@@ -137,9 +137,10 @@ ASGI_APPLICATION = 'config.asgi.application'
 # CHHANNEL_LAYERS = {
 #
 WSGI_APPLICATION = 'config.wsgi.application'
-
+#
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -153,10 +154,22 @@ DATABASES = {
 
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'haru',
+#         'USER': 'root',
+#         'PASSWORD': '12345678',
+#         'HOST': 'db',
+#         'PORT': '3306',
 #     }
 # }
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+        }
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -238,3 +251,78 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Seoul'
 CELERY_ENABLE_UTC = False
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,  # 디폴트 : True, 장고의 디폴트 로그 설정을 대체. / False : 장고의 디폴트 로그 설정의 전부 또는 일부를 다시 정의
+    'formatters': {  # message 출력 포맷 형식
+        'verbose': {
+            'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt': "%d/%b/%Y %H:%M:%S"
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs') + "/log",  # message가 저장될 파일명(파일명 변경 가능)
+            'formatter': 'verbose'
+        },
+        'member_file': {
+            'level': 'INFO',
+            'class': "logging.FileHandler",
+            'filename': os.path.join(BASE_DIR, 'logs') + "/member_log"
+        },
+        'calendar_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs') + "/calendar_log"
+
+        },
+        'diary_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs') + "/diary_log"
+
+        },
+        'static_file':{
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs') + "/static_log"
+
+        },
+
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],  # 'file' : handler의 이름
+            'propagate': True,
+            'level': 'DEBUG',  # DEBUG 및 그 이상의 메시지를 file 핸들러에게 보내줍니다.
+        },
+        'member': {  # Project에서 생성한 app의 이름
+            'handlers': ['member_file'],  # 다른 app을 생성 후 해당 app에서도
+            'propagate': True,
+            'level': 'INFO',  # 사용하고자 할 경우 해당 app 이름으로
+        },
+        'harucalendar': {  # Project에서 생성한 app의 이름
+            'handlers': ['calendar_file'],  # 다른 app을 생성 후 해당 app에서도
+            'propagate': True,
+            'level': 'INFO',  # 사용하고자 할 경우 해당 app 이름으로
+        },
+        'diary': {  # Project에서 생성한 app의 이름
+            'handlers': ['diary_file'],  # 다른 app을 생성 후 해당 app에서도
+            'propagate': True,
+            'level': 'INFO',  # 사용하고자 할 경우 해당 app 이름으로
+        },
+        'static': {  # Project에서 생성한 app의 이름
+            'handlers': ['static_file'],  # 다른 app을 생성 후 해당 app에서도
+            'propagate': True,
+            'level': 'INFO',  # 사용하고자 할 경우 해당 app 이름으로
+        },
+        # 좌측 코드를 추가 작성해서 사용
+    }
+}
+
