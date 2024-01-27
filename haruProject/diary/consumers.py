@@ -216,10 +216,8 @@ class HaruConsumer(AsyncWebsocketConsumer):
                     'position': {
                         'top2': top,
                         'left2': left,
-                        'rotate2': rotate,
-                        'image_url': image_url,
-                        'image_box_id': image_box_id
-                    },            # 'image_box_id': image_box_id
+                       # 'image': image_url,
+                    },  # 'image_box_id': image_box_id
                 }
             )
             logger.debug(f"groupSend(image_drag):, sticker_id: {sticker_id} top: {top}, left: {left}")
