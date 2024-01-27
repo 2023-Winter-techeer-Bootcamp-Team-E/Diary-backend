@@ -152,23 +152,26 @@ DATABASES = {
     }
 }
 
+# RDS 설정
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'haru',
-#         'USER': 'root',
-#         'PASSWORD': '12345678',
-#         'HOST': 'db',
-#         'PORT': '3306',
+#         'NAME': env("DATABASE_NAME"),
+#         'USER': env("DATABASE_USERNAME"),
+#         'PASSWORD': env("DATABASE_PASSWORD"),
+#         'HOST': env("DATABASE_HOST"),
+#         'PORT': env("DATABASE_PORT", cast=int),
 #     }
 # }
+#
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-        }
-}
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#         }
+# }
 
 
 # Password validation
