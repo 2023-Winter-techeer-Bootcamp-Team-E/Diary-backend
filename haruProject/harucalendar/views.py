@@ -46,8 +46,8 @@ class HarucalendarView(APIView):  # 캘린더 조회
         for items in calendar_stickers:
             calendar_sticker_list.append({
                 'sticker_image_url': items.sticker_image_url,
-                'xcoor': items.xcoor,
-                'ycoor': items.ycoor,
+                'top': items.top,
+                'left': items.left,
                 'width': items.width,
                 'height': items.height,
                 'rotate': items.rotate

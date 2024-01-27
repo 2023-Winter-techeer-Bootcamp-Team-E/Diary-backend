@@ -6,7 +6,7 @@ from .models import Diary, DiaryTextBox, DiarySticker, HaruRoom
 class DiaryTextBoxSerializer(serializers.ModelSerializer):
     class Meta:
         model = DiaryTextBox
-        fields = ['textbox_id', 'writer', 'content', 'xcoor', 'ycoor', 'width', 'height', 'rotate']
+        fields = ['textbox_id', 'writer', 'content', 'xcoor', 'ycoor', 'width', 'height']
 
 
 class DiaryStickerSerializer(serializers.ModelSerializer):
@@ -96,7 +96,7 @@ class DiaryCreateSerializer(serializers.ModelSerializer):
 class DiaryTextBoxCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = DiaryTextBox
-        fields = ['textbox_id', 'writer', 'content', 'xcoor', 'ycoor', 'width', 'height', 'rotate', 'content']
+        fields = ['textbox_id', 'writer', 'content', 'xcoor', 'ycoor', 'width', 'height',  'content']
 
     def create(self, validated_data):
         return DiaryTextBox.objects.create(**validated_data)
@@ -105,7 +105,7 @@ class DiaryTextBoxCreateSerializer(serializers.ModelSerializer):
 class DiaryStickerCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = DiarySticker
-        fields = ['sticker_image_url', 'xcoor', 'ycoor', 'width', 'height', 'rotate']
+        fields = ['sticker_image_url', 'top', 'left', 'width', 'height']
 
     def create(self, validated_data):
         return DiarySticker.objects.create(**validated_data)
