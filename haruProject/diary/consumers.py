@@ -230,7 +230,11 @@ class HaruConsumer(AsyncWebsocketConsumer):
             height = sticker_data['height2']
             top = sticker_data['top2']
             left = sticker_data['left2']
+            # rotate = sticker_data['rotate2']
+            # sticker_url = sticker_data['image']
             sticker_id = data.get('id', None)
+            # if sticker_id is None:
+            #     sticker_id = await self.save_sticker(width, height, top, left, rotate, sticker_url)
             await self.channel_layer.group_send(
                 self.room_name,
                 {
@@ -241,9 +245,8 @@ class HaruConsumer(AsyncWebsocketConsumer):
                         'height2': height,
                         'top2': top,
                         'left2': left,
-                        'rotate2': rotate,
-                        'image_url': image_url,
-                        'image_box_id': image_box_id
+                        # 'rotate2': rotate,
+                        # 'sticker': sticker_url,
                     },
                 }
             )
@@ -253,7 +256,10 @@ class HaruConsumer(AsyncWebsocketConsumer):
         elif _type == "image_rotate":
             sticker_data = data['position']
             rotate = sticker_data['rotate2']
+            # image_url = data['image']
             sticker_id = data.get('id', None)
+            # if image_box_id is None:
+            #     image_box_id = await self.save_image(width, height, top, left, rotate, image_url)
             await self.channel_layer.group_send(
                 self.room_name,
                 {
@@ -438,9 +444,19 @@ class HaruConsumer(AsyncWebsocketConsumer):
                     'type': 'delete_object',
                     'object_type': object_type,
                     'object_id': object_id,
-                    'message': deleted
                 }
             )
+            logger.debug(f"groupSend(deleted):, object_type: {object_type}, object_id: {object_id}")
+
+        elif _type in ["drag_stop", "rotate_stop", "resize_stop"]:
+            if data['object_type'] == 'sticker':
+                sticker_id = data['id']
+                sticker_data = data['position']
+                await self.save_sticker(sticker_id, sticker_data)
+            elif data['object_type'] == 'text':
+                textbox_id = data['id']
+                textbox_data = data['position']
+                await self.save_textbox(textbox_id, textbox_data)
 
     async def send_user_count(self):
         user_count = self.room.user_count
