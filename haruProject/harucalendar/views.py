@@ -129,21 +129,3 @@ class HarucalendarstickerView(APIView):
             return Response(
                 {'calendar_id': calendar_id, 'year_month': year_month, 'code': 'c002', 'status': '200',
                  'message': '스티커 추가 성공'}, status=status.HTTP_200_OK)
-
-
-
-    # calendar_session_list = []
-        # for item in Diary.objects.all():
-        #     diary_textboxes = item.diaryTextBoxs.all()
-        #
-        #     calendar_session_list.append({
-        #         'diary_date': item.diary_date,  # DiaryTextBox 모델의 diary_date 가져오기
-        #         'is_expird': item.is_expiry,
-        #         'day': item.diary_day,
-        #         'diary_textboxes': [{'writer': textbox.writer, 'content': textbox.content} for textbox in
-        #                             diary_textboxes]
-        #     })
-        # request.session['calendar_session_list'] = calendar_session_list
-        # session checking
-        # for key, value in request.session.items():
-        #     print(f'세션 키: {key}, 세션 값: {value}')
