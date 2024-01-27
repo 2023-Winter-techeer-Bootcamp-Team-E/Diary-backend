@@ -77,30 +77,129 @@ class HaruConsumer(AsyncWebsocketConsumer):
         _type = data['type']
 
         if _type == "text_input":
-            x = data['x']
-            y = data['y']
-            width = data['width']
-            height = data['height']
-            rotate = data['rotate']
-            text = data['text']
-            writer = data['writer']
-            # text_box_id = data.get('text_box_id', None)
-            # if text_box_id is None:
-            #     text_box_id = await self.save_textbox(x, y, width, height, rotate, text, writer)
+            text_id = data['id']
+            content = data['content']
             await self.channel_layer.group_send(
                 self.room_name,
                 {
                     'type': 'text_input',
-                    'x': x,
-                    'y': y,
-                    'width': width,
-                    'height': height,
-                    'rotate': rotate,
-                    'text': text,
-                    'writer': writer,
-                    # 'text_box_id': text_box_id
+                    'text_id': text_id,
+                    'content': content,
                 }
             )
+            logger.debug(f"groupSend(text_input: {text_id}, content type: {type(content)}, content: {content})")
+            print('print: ' + content)
+
+        elif _type == "nickname_input":
+            text_id = data['id']
+            writer = data['nickname']
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    'type': 'nickname_input',
+                    'text_id': text_id,
+                    'nickname': writer,
+                }
+            )
+            logger.debug(f"groupSend(nickname_input: text_id: {text_id}, nickname: {writer})")
+
+        elif _type == "text_drag":
+            text_id = data['id']
+            text_drag_data = data['position']
+            x = text_drag_data['x']
+            y = text_drag_data['y']
+            # width = text_drag_data['width']
+            # height = text_drag_data['height']
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    'type': 'text_drag',
+                    'text_id': text_id,
+                    'position': {
+                        'x': x,
+                        'y': y,
+                        # 'width': width,
+                        # 'height': height,
+                    },
+                }
+            )
+            logger.debug(f"groupSend(text_drag): text_id: {text_id}, x: {x}, y: {y}")
+
+        elif _type == "text_resize":
+            text_id = data['id']
+            text_resize_data = data['position']
+            width = text_resize_data['width']
+            height = text_resize_data['height']
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    'type': 'text_resize',
+                    'text_id': text_id,
+                    'position': {
+                        'width': width,
+                        'height': height,
+                    },
+                }
+            )
+            logger.debug(f"groupSend(text_resize): text_id: {text_id}, width: {width}, height: {height}")
+
+        elif _type == "save_text":
+            text_id = data['id']
+            content = data['content']
+            writer = data['nickname']
+            text_data = data['position']
+            x = text_data['x']
+            y = text_data['y']
+            width = text_data['width']
+            height = text_data['height']
+            await self.save_textbox(text_id, content, writer, text_data)
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    'type': 'save_text',
+                    'text_id': text_id,
+                    'content': content,
+                    'nickname': writer,
+                    'position': {
+                        'x': x,
+                        'y': y,
+                        'width': width,
+                        'height': height,
+                    },
+                }
+            )
+            logger.debug(
+                f"groupSend(save_text): text_id: {text_id}, content: {content}, nickname: {writer}, "
+                f"position: {text_data}")
+
+        elif _type == "create_textbox":
+            # object_type = data['object_type']
+            text_data = data['position']
+            width = text_data['width']
+            height = text_data['height']
+            x = text_data['x']
+            y = text_data['y']
+            # writer = data['nickname']
+            textbox_id = data.get('id', None)
+            if textbox_id is None:
+                textbox_id = await self.create_textbox(x, y, width, height)  # writer
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    'type': 'create_textbox',
+                    # 'object_type': object_type,
+                    # 'text': text,
+                    'text_id': textbox_id,
+                    'position': {
+                        'width': width,
+                        'height': height,
+                        'x': x,
+                        'y': y,
+                    },
+                }
+            )
+            logger.debug(f"After group_send:, text_id: {textbox_id}, {width}, {height}, {x}, {y}")
+
         elif _type == "image_drag":
             drag_data = data['drag']
             width = drag_data['width2']
@@ -236,18 +335,39 @@ class HaruConsumer(AsyncWebsocketConsumer):
         }))
 
     async def text_input(self, event):
+        logger.debug("sendTextInput")
+        await self.send(text_data=json.dumps(event))
+
+    async def nickname_input(self, event):
+        logger.debug("sendNicknameInput")
+        await self.send(text_data=json.dumps(event))
+
+    async def text_drag(self, event):
+        logger.debug("sendTextDrag")
+        await self.send(text_data=json.dumps(event))
+
+    async def text_resize(self, event):
+        logger.debug("sendTextResize")
         await self.send(text_data=json.dumps(event))
 
     async def image_drag(self, event):  # save
+        logger.debug("sendDragged")
         await self.send(text_data=json.dumps(event))
 
     async def image_rotate(self, event):  # save
+        logger.debug("sendRotated")
         await self.send(text_data=json.dumps(event))
 
     async def image_resize(self, event):  # save
+        logger.debug("sendResized")
         await self.send(text_data=json.dumps(event))
 
     async def create_sticker(self, event):
+        logger.debug("sendStickerCreated")
+        await self.send(text_data=json.dumps(event))
+
+    async def create_textbox(self, event):
+        logger.debug("sendTextBoxCreated")
         await self.send(text_data=json.dumps(event))
 
     async def send_static_image(self, event):
@@ -266,7 +386,6 @@ class HaruConsumer(AsyncWebsocketConsumer):
         }))
 
     # Receive message from WebSocket
-
     # Receive message from room group
     # async def chat_message(self, event):
     #     message = event['message']
@@ -299,7 +418,6 @@ class HaruConsumer(AsyncWebsocketConsumer):
             return None
 
     # @database_sync_to_async
-
     @database_sync_to_async
     def remove_online_user(self):
         try:
@@ -321,9 +439,23 @@ class HaruConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def save_textbox(self, x, y, width, height, rotate, text, writer):
         textbox, _ = (DiaryTextBox.objects.get_or_create
-                      (diary_id=self.room_name, writer=writer, content=text, xcoor=x, ycoor=y, width=width,
-                       height=height, rotate=rotate))
+                      (diary_id=self.room_name, xcoor=x, ycoor=y, width=width, height=height))
+        logger.debug(f"create_textbox: {textbox}")
+
         return textbox.textbox_id
+
+    @database_sync_to_async
+    def save_textbox(self, text_id, content, writer, text_data):
+        text_box = get_object_or_404(DiaryTextBox, textbox_id=text_id)
+        DiaryTextBoxModifySerializer(text_box, text_data={
+            'content': content,
+            'writer': writer,
+            'x': text_data.x,
+            'y': text_data.y,
+            'width': text_data.width,
+            'height': text_data.height,
+        }).is_valid(raise_exception=True)
+        logger.debug(f"update_textbox: {text_box.textbox_id}")
 
     @database_sync_to_async
     def delete_box(self, box_id, box_type):
