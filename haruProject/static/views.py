@@ -8,6 +8,10 @@ from rest_framework import status
 from .models import StaticImage
 from .swaggerserializer import StaticImageRequestSerializer, StaticImageGetResponseSerializer
 
+import logging
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 class StaticImageView(APIView):
     @staticmethod

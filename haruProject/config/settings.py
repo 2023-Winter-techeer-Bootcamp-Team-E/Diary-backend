@@ -78,8 +78,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     'whitenoise.middleware.WhiteNoiseMiddleware',
-
-
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 
 ]
 
@@ -93,10 +93,11 @@ CORS_ORIGIN_WHITELIST = [
     "http://localhost:*"
 ]
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "host.docker.internal"]
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1",
+    "https://www.haruconnection.store"
 ]
 CORS_ALLOW_CREDENTIALS = True
 SESSION_COOKIE_HTTPONLY = True
@@ -106,10 +107,9 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-
 # SESSION_COOKIE_DOMAIN = "founderslooking.com"
 
-#SESSION_COOKIE_SECURE = False
+# SESSION_COOKIE_SECURE = False
 
 CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://127.0.0.1"]
 
@@ -155,6 +155,20 @@ DATABASES = {
         'PORT': '3306',
     }
 }
+
+# RDS 설정
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': env("DATABASE_NAME"),
+#         'USER': env("DATABASE_USERNAME"),
+#         'PASSWORD': env("DATABASE_PASSWORD"),
+#         'HOST': env("DATABASE_HOST"),
+#         'PORT': env("DATABASE_PORT", cast=int),
+#     }
+# }
+#
+
 
 # DATABASES = {
 #     'default': {
@@ -223,12 +237,12 @@ AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_USE_SSL = True
 
 # Static files (CSS, JavaScript, images)
-#STATIC_URL = f"{AWS_S3_URL_PROTOCOL}://{AWS_S3_CUSTOM_DOMAIN}/static/"
-#STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# STATIC_URL = f"{AWS_S3_URL_PROTOCOL}://{AWS_S3_CUSTOM_DOMAIN}/static/"
+# STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # Media files (uploads)
-#DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-#MEDIA_URL = f"{AWS_S3_URL_PROTOCOL}://{AWS_S3_CUSTOM_DOMAIN}/media/"
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# MEDIA_URL = f"{AWS_S3_URL_PROTOCOL}://{AWS_S3_CUSTOM_DOMAIN}/media/"
 # SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 SWAGGER_SETTINGS = {
@@ -245,4 +259,77 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Seoul'
 CELERY_ENABLE_UTC = False
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,  # 디폴트 : True, 장고의 디폴트 로그 설정을 대체. / False : 장고의 디폴트 로그 설정의 전부 또는 일부를 다시 정의
+    'formatters': {  # message 출력 포맷 형식
+        'verbose': {
+            'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt': "%d/%b/%Y %H:%M:%S"
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs') + "/log",  # message가 저장될 파일명(파일명 변경 가능)
+            'formatter': 'verbose'
+        },
+        'member_file': {
+            'level': 'INFO',
+            'class': "logging.FileHandler",
+            'filename': os.path.join(BASE_DIR, 'logs') + "/member_log"
+        },
+        'calendar_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs') + "/calendar_log"
+
+        },
+        'diary_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs') + "/diary_log"
+
+        },
+        'static_file':{
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs') + "/static_log"
+
+        },
+
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],  # 'file' : handler의 이름
+            'propagate': True,
+            'level': 'DEBUG',  # DEBUG 및 그 이상의 메시지를 file 핸들러에게 보내줍니다.
+        },
+        'member': {  # Project에서 생성한 app의 이름
+            'handlers': ['member_file'],  # 다른 app을 생성 후 해당 app에서도
+            'propagate': True,
+            'level': 'INFO',  # 사용하고자 할 경우 해당 app 이름으로
+        },
+        'harucalendar': {  # Project에서 생성한 app의 이름
+            'handlers': ['calendar_file'],  # 다른 app을 생성 후 해당 app에서도
+            'propagate': True,
+            'level': 'INFO',  # 사용하고자 할 경우 해당 app 이름으로
+        },
+        'diary': {  # Project에서 생성한 app의 이름
+            'handlers': ['diary_file'],  # 다른 app을 생성 후 해당 app에서도
+            'propagate': True,
+            'level': 'INFO',  # 사용하고자 할 경우 해당 app 이름으로
+        },
+        'static': {  # Project에서 생성한 app의 이름
+            'handlers': ['static_file'],  # 다른 app을 생성 후 해당 app에서도
+            'propagate': True,
+            'level': 'INFO',  # 사용하고자 할 경우 해당 app 이름으로
+        },
+        # 좌측 코드를 추가 작성해서 사용
+    }
+}
 

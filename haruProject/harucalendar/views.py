@@ -14,6 +14,10 @@ from member.models import Member
 from .swaggerserializer import HarucalendarstickerRequestSerializer, HarucalendarstickerGetResponseSerializer, \
     HarucalendarRequestSerializer, HarucalendarGetResponseSerializer, HarucalendarstickerSerializer
 
+import logging
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 class HarucalendarView(APIView):  # 캘린더 조회
 

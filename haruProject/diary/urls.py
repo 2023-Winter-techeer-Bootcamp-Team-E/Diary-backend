@@ -14,6 +14,6 @@ urlpatterns = [
     path('save',DiariesSave.as_view()),
     path('link', DiaryManager.as_view(), name='diary_manager'),
     path('stickers', DiaryStickerManager.as_view(), name='diary_sticker_manager'),
-    path("harurooms/<int:diaryid>/", views.room, name="room"),
-
+    path("harurooms/<int:diary_id>/", HaruRoomManager.as_view()),
+    path("haruroom/<int:diaryid>/", views.room, name="room"),
 ]

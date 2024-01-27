@@ -5,7 +5,10 @@ from rest_framework.response import Response
 
 from .serializers import MemberSerializer, SignSerializer
 from .swagger_serializers import *
+import logging
+from datetime import datetime
 
+logger = logging.getLogger(__name__)
 
 class SignUpView(APIView):
     @swagger_auto_schema(

@@ -25,6 +25,10 @@ from .swaggerserializer import DiaryGetResponseSerializer, DiaryLinkGetResponseS
     DiaryGetRequestSerializer, DiaryLinkRequestSerializer, SwaggerHaruRoomRequestSerializer, \
     SwaggerHaruRoomResponseSerializer
 
+import logging
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 
