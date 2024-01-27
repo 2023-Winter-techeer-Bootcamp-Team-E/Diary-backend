@@ -225,16 +225,6 @@ class HaruConsumer(AsyncWebsocketConsumer):
             logger.debug(f"groupSend(image_drag):, sticker_id: {sticker_id} top: {top}, left: {left}")
 
         elif _type == "image_resize":
-            resize_data = data['resize']
-            width = resize_data['width2']
-            height = resize_data['height2']
-            top = resize_data['top2']
-            left = resize_data['left2']
-            rotate = resize_data['rotate2']
-            image_url = resize_data['image_url']
-            image_box_id = data.get('image_box_id', None)
-            if image_box_id is None:
-                image_box_id = await self.save_image(width, height, top, left, rotate, image_url)
             sticker_data = data['position']
             width = sticker_data['width2']
             height = sticker_data['height2']
@@ -261,16 +251,6 @@ class HaruConsumer(AsyncWebsocketConsumer):
                 f"After resize_group_send:, sticker_id: {sticker_id}, w: {width},h: {height},t: {top}, l: {left}")
 
         elif _type == "image_rotate":
-            rotate_data = data['rotate']
-            width = rotate_data['width2']
-            height = rotate_data['height2']
-            top = rotate_data['top2']
-            left = rotate_data['left2']
-            rotate = rotate_data['rotate2']
-            image_url = rotate_data['image_url']
-            image_box_id = data.get('image_box_id', None)
-            if image_box_id is None:
-                image_box_id = await self.save_image(width, height, top, left, rotate, image_url)
             sticker_data = data['position']
             rotate = sticker_data['rotate2']
             sticker_id = data.get('id', None)
@@ -327,14 +307,6 @@ class HaruConsumer(AsyncWebsocketConsumer):
                 self.room_name,
                 {
                     'type': 'create_sticker',
-                    'image': {
-                        'width': width,
-                        'height': height,
-                        'top': top,
-                        'left': left,
-                        'rotate': rotate,
-                        'image_url': image_url,
-                        'image_box_id': image_box_id
                     'image': sticker_url,
                     'sticker_id': sticker_id,
                     'position': {
@@ -346,13 +318,120 @@ class HaruConsumer(AsyncWebsocketConsumer):
                     },
                 }
             )
+            logger.debug(f"After group_send:, {sticker_url}, {sticker_id}, {width}, {height}, {top}, {left}, {rotate}")
+
+        elif _type == "dalle_drag":
+            sticker_id = data['id']
+            sticker_data = data['position']
+            top = sticker_data['top2']
+            left = sticker_data['left2']
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    'type': 'dalle_drag',
+                    'sticker_id': sticker_id,
+                    'position': {
+                        'top2': top,
+                        'left2': left,
                     },
                 }
             )
+            logger.debug(f"groupSend(dragged):, sticker_id: {sticker_id}, top: {top}, left: {left}")
+
+        elif _type == "dalle_resize":
+            sticker_id = data['id']
+            sticker_data = data['position']
+            width = sticker_data['width2']
+            height = sticker_data['height2']
+            top = sticker_data['top2']
+            left = sticker_data['left2']
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    'type': 'dalle_resize',
+                    'sticker_id': sticker_id,
+                    'position': {
+                        'width2': width,
+                        'height2': height,
+                        'top2': top,
+                        'left2': left,
+                    },
+                }
+            )
+            logger.debug(f"groupSend(resized):, sticker_id: {sticker_id}, width: {width}, height: {height}, "
+                         f"top: {top}, left: {left}")
+
+        elif _type == "dalle_rotate":
+            sticker_id = data['id']
+            sticker_data = data['position']
+            rotate = sticker_data['rotate2']
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    'type': 'dalle_rotate',
+                    'sticker_id': sticker_id,
+                    'position': {
+                        'rotate2': rotate,
+                    },
+                }
+            )
+
+        elif _type == "save_dalle":
+            sticker_id = data['id']
+            sticker_url = data['image']
+            sticker_data = data['position']
+            width = sticker_data['width2']
+            height = sticker_data['height2']
+            top = sticker_data['top2']
+            left = sticker_data['left2']
+            rotate = sticker_data['rotate2']
+            await self.save_sticker(sticker_id, sticker_url, sticker_data)
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    'type': 'save_dalle',
+                    'sticker_id': sticker_id,
+                    'sticker_url': sticker_url,
+                    'position': {
+                        'width2': width,
+                        'height2': height,
+                        'top2': top,
+                        'left2': left,
+                        'rotate2': rotate,
+                    },
+                }
+            )
+        elif _type == "create_dalle":
+            sticker_url = data['image']
+            sticker_data = data['position']
+            width = sticker_data['width2']
+            height = sticker_data['height2']
+            top = sticker_data['top2']
+            left = sticker_data['left2']
+            rotate = sticker_data['rotate2']
+            sticker_id = data.get('sticker_id', None)
+            if sticker_id is None:
+                sticker_id = await self.create_sticker(width, height, top, left, rotate, sticker_url)
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    'type': 'create_dalle',
+                    'image': sticker_url,
+                    'sticker_id': sticker_id,
+                    'position': {
+                        'width2': width,
+                        'height2': height,
+                        'top2': top,
+                        'left2': left,
+                        'rotate2': rotate,
+                    },
+                }
+            )
+
         elif _type == "delete_object":
             object_type = data['object_type']
             object_id = data['object_id']
-            deleted = await self.delete_box(object_id, object_type)
+            await self.delete_box(object_id, object_type)
             await self.channel_layer.group_send(
                 self.room_name,
                 {
@@ -422,6 +501,26 @@ class HaruConsumer(AsyncWebsocketConsumer):
 
     async def save_image(self, event):
         logger.debug("sendImageSaved")
+        await self.send(text_data=json.dumps(event))
+
+    async def create_dalle(self, event):
+        logger.debug("sendDalleCreated")
+        await self.send(text_data=json.dumps(event))
+
+    async def dalle_drag(self, event):
+        logger.debug("sendDalleDragged")
+        await self.send(text_data=json.dumps(event))
+
+    async def dalle_resize(self, event):
+        logger.debug("sendDalleResized")
+        await self.send(text_data=json.dumps(event))
+
+    async def dalle_rotate(self, event):
+        logger.debug("sendDalleRotated")
+        await self.send(text_data=json.dumps(event))
+
+    async def save_dalle(self, event):
+        logger.debug("sendDalleSaved")
         await self.send(text_data=json.dumps(event))
 
     async def send_static_image(self, event):
