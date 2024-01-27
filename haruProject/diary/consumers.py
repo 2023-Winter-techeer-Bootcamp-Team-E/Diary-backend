@@ -1,21 +1,26 @@
+import logging
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 from diary.models import HaruRoom, Diary, DiarySticker, DiaryTextBox
-from django.contrib.sessions.models import Session
+from diary.serializers import (HaruRoomDetailSerializer,
+                               DiaryTextBoxModifySerializer, DiaryStickerModifySerializer)
+from rest_framework.generics import get_object_or_404
+
+# from django.contrib.sessions.models import Session
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class HaruConsumer(AsyncWebsocketConsumer):
-
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
         # 인스턴스 변수는 생성자 내에서 정의.
         # 인스턴스 변수 group_name 추가
         self.room_name = None
         self.user = None
         self.room = None
-
         # session_key = self.scope['cookies'].get('sessionid')
         # if session_key:
         #     user_id = database_sync_to_async(Session.objects.get)(session_key=session_key)
@@ -27,6 +32,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
         #     if
 
     # ChatConsumer는 동기식 장고 모델에는 접근하지 않고, 비동기식 채널, 채널 레이어에만 접근한다.
+
     async def connect(self):
         # self.user = self.scope['user']
         self.room_name = self.scope['url_route']['kwargs']['diary_id']
@@ -43,17 +49,17 @@ class HaruConsumer(AsyncWebsocketConsumer):
         if not self.room_name or len(self.room_name) > 100:
             await self.close(code=400)
             return
-
         self.room = await self.get_or_create_room()
         # join room group
         await self.channel_layer.group_add(self.room_name, self.channel_name)
         await self.create_online_user()
-        if self.room.user_count > 5:
-            await self.close()
-
+        # if self.room.user_count > 5:
+        #     await self.close()
         await self.accept()
         await self.send_user_count()
-
+        await self.send_db_info()
+        logger.debug("accepted")
+        logger.debug(self.send_db_info())
         # await self.send_user_list()
         # 각 애플리케이션 인스턴스는 단일 소비자 인스턴스를 생성, -> self.channel_name
         # 채널 레이어를 활성화한 경우 소비자는 고유한 채널 이름을 생성하고 이벤트를 수신 대기하기 시작
@@ -222,6 +228,13 @@ class HaruConsumer(AsyncWebsocketConsumer):
             }
         )
 
+    async def send_db_info(self):
+        diary_info = await self.get_diary()
+        await self.send(text_data=json.dumps({
+            'type': 'send_db_info',
+            'diary_info': diary_info
+        }))
+
     async def text_input(self, event):
         await self.send(text_data=json.dumps(event))
 
@@ -263,6 +276,12 @@ class HaruConsumer(AsyncWebsocketConsumer):
 
     def get_user_count(self):
         return self.room.user_count
+
+    @database_sync_to_async
+    def get_diary(self):
+        diary = Diary.objects.get(diary_id=self.room_name)
+        diary_serializer = HaruRoomDetailSerializer(diary).data
+        return diary_serializer
 
     @database_sync_to_async
     def get_or_create_room(self):

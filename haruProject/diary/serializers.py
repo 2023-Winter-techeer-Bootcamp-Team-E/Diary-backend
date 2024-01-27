@@ -24,6 +24,24 @@ class DiaryDetailSerializer(serializers.ModelSerializer):
         fields = ['diary_id', 'year_month', 'diary_bg_id', 'is_expiry', 'diaryTextBoxs', 'diaryStickers']
 
 
+class HaruRoomDetailSerializer(serializers.ModelSerializer):
+    diaryTextBoxs = DiaryTextBoxSerializer(many=True, read_only=True)
+    diaryStickers = DiaryStickerSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Diary
+        fields = ['diaryTextBoxs', 'diaryStickers']
+
+
+class HaruroomsSerializer(serializers.ModelSerializer):
+    diaryTextBoxs = DiaryTextBoxSerializer(many=True, read_only=True)
+    diaryStickers = DiaryStickerSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Diary
+        fields = ['diary_bg_id', 'day', 'diaryTextBoxs', 'diaryStickers']
+
+
 class DiarySnsLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Diary
