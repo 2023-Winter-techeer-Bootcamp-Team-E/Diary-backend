@@ -149,10 +149,10 @@ class DiariesSave(APIView):
             diary_instance = get_object_or_404(Diary, diary_id=diary_id)
         except ObjectDoesNotExist:
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
-        diary_instance.is_expiry = True
-        diary_instance.save()
         textboxs_data = request.data.get('textboxs', [])
         stickers_data = request.data.get('stickers', [])
+        diary_instance.is_expiry = True
+        diary_instance.save()
         try:
             for sticker_data in stickers_data:
                 sticker_serializer = DiaryStickerCreateSerializer(data=sticker_data)
