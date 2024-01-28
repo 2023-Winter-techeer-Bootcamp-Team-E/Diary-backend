@@ -152,8 +152,8 @@ services:
     image: prom/prometheus
     restart: 'always'
     volumes:
-      - ./prometheus:/etc/prometheus
-      - ./prometheus/prometheus.yml:/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus:/etc/prometheus
+      - ./monitoring/prometheus/prometheus.yml:/prometheus/prometheus.yml:ro
     ports:
       - 9090:9090
     command:
@@ -172,9 +172,9 @@ services:
       GF_AUTH_DISABLE_LOGIN_FORM: 'true'
     restart: 'always'
     volumes:
-      - ./grafana:/var/lib/grafana
-      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana:/var/lib/grafana
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
     ports:
       - 3000:3000
     depends_on:
@@ -182,29 +182,32 @@ services:
     networks:
       - haru
 
-#  nginx-prometheus-exporter:
-#    image: nginx/nginx-prometheus-exporter:latest
-#    ports:
-#      - "9113:9113"
-#    command:
-#      - --nginx.scrape-uri=http://nginx:80/metrics
-#      - --web.telemetry-path=/metrics
-#    depends_on:
-#      - nginx
-#    networks:
-#      - haru
-
-  telegraf:
-    image: telegraf:latest
-    container_name: telegraf
-    volumes:
-      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+  node-exporter:
+    container_name: node-exporter
+    image: prom/node-exporter
+    ports:
+      - 9100:9100
     networks:
       - haru
-    depends_on:
-      - prometheus
-    restart: always
-    command: [ "telegraf", "--config", "/etc/telegraf/telegraf.conf" ]
+
+  cadvisor: #docker health check 해보기, 컨테이너 순서를 보장
+    container_name: cadvisor
+    image: gcr.io/cadvisor/cadvisor:v0.46.0
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro # 이 부분이 없으면 cadvisor에서 docker container를 잡지 못하는 것 같음.
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro # cadvisor 배포 깃허브 페이지를 보고 추가
+      - /etc/machine-id:/etc/machine-id:ro # Failed to get system UUID: open /etc/machine-id: no such file or directory 해결책
+    ports:
+      - 8080:8080
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    networks:
+      - haru
 
 networks:
   haru:
