@@ -152,7 +152,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
             y = text_data['y']
             width = text_data['width']
             height = text_data['height']
-            await self.save_textbox(text_id, content, writer, text_data)
+            await self.save_textboxs(text_id, content, writer, text_data)
             await self.channel_layer.group_send(
                 self.room_name,
                 {
@@ -182,7 +182,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
             # writer = data['nickname']
             textbox_id = data.get('id', None)
             if textbox_id is None:
-                textbox_id = await self.create_textbox(x, y, width, height)  # writer
+                textbox_id = await self.create_textboxs(x, y, width, height)  # writer
             await self.channel_layer.group_send(
                 self.room_name,
                 {
@@ -279,7 +279,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
             top = sticker_data['top2']
             left = sticker_data['left2']
             rotate = sticker_data['rotate2']
-            await self.save_sticker(sticker_id, sticker_url, sticker_data)
+            await self.save_stickers(sticker_id, sticker_url, sticker_data)
             await self.channel_layer.group_send(
                 self.room_name,
                 {
@@ -306,7 +306,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
             rotate = sticker_data['rotate2']
             sticker_id = data.get('sticker_id', None)
             if sticker_id is None:
-                sticker_id = await self.create_sticker(width, height, top, left, rotate, sticker_url)
+                sticker_id = await self.create_stickers(width, height, top, left, rotate, sticker_url)
             await self.channel_layer.group_send(
                 self.room_name,
                 {
@@ -389,7 +389,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
             top = sticker_data['top2']
             left = sticker_data['left2']
             rotate = sticker_data['rotate2']
-            await self.save_sticker(sticker_id, sticker_url, sticker_data)
+            await self.save_stickers(sticker_id, sticker_url, sticker_data)
             await self.channel_layer.group_send(
                 self.room_name,
                 {
@@ -415,7 +415,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
             rotate = sticker_data['rotate2']
             sticker_id = data.get('sticker_id', None)
             if sticker_id is None:
-                sticker_id = await self.create_sticker(width, height, top, left, rotate, sticker_url)
+                sticker_id = await self.create_stickers(width, height, top, left, rotate, sticker_url)
             await self.channel_layer.group_send(
                 self.room_name,
                 {
@@ -450,11 +450,11 @@ class HaruConsumer(AsyncWebsocketConsumer):
             if data['object_type'] == 'sticker':
                 sticker_id = data['id']
                 sticker_data = data['position']
-                await self.save_sticker(sticker_id, sticker_data)
+                await self.save_stickers(sticker_id, sticker_data)
             elif data['object_type'] == 'text':
                 textbox_id = data['id']
                 textbox_data = data['position']
-                await self.save_textbox(textbox_id, textbox_data)
+                await self.save_textboxs(textbox_id, textbox_data)
 
     async def send_user_count(self):
         user_count = self.room.user_count
@@ -596,7 +596,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
             return None
 
     @database_sync_to_async
-    def create_sticker(self, width, height, top, left, rotate, sticker_url):
+    def create_stickers(self, width, height, top, left, rotate, sticker_url):
         sticker, _ = (DiarySticker.objects.get_or_create
                       (diary_id=self.room_name, sticker_image_url=sticker_url, top=top, left=left, width=width,
                        height=height, rotate=rotate))
@@ -604,7 +604,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
         return sticker.sticker_id
 
     @database_sync_to_async
-    def save_sticker(self, sticker_id, sticker_url, sticker_data):
+    def save_stickers(self, sticker_id, sticker_url, sticker_data):
         sticker = get_object_or_404(DiarySticker, sticker_id=sticker_id)
         DiaryStickerModifySerializer(sticker, data={
             'sticker_image_url': sticker_url,
@@ -617,7 +617,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
         logger.debug(f"save_sticker: {sticker.sticker_id}")
 
     @database_sync_to_async
-    def create_textbox(self, x, y, width, height):
+    def create_textboxs(self, x, y, width, height):
         textbox, _ = (DiaryTextBox.objects.get_or_create
                       (diary_id=self.room_name, xcoor=x, ycoor=y, width=width, height=height))
         logger.debug(f"create_textbox: {textbox}")
@@ -625,7 +625,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
         return textbox.textbox_id
 
     @database_sync_to_async
-    def save_textbox(self, text_id, content, writer, text_data):
+    def save_textboxs(self, text_id, content, writer, text_data):
         text_box = get_object_or_404(DiaryTextBox, textbox_id=text_id)
         DiaryTextBoxModifySerializer(text_box, text_data={
             'content': content,

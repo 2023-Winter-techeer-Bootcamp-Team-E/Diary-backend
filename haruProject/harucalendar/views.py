@@ -90,7 +90,6 @@ class HarucalendarstickerView(APIView):
             calendar_id = request.session.get('calendar_id')
             year_month = request.session.get('year_month')
             stickers_data = request.data.get('stickers', [])
-            print(calendar_id,year_month)
 
             for sticker_data in stickers_data:
 
@@ -99,7 +98,6 @@ class HarucalendarstickerView(APIView):
                     calendar_serializer = HarucalendarCreateSerializer(data={"year_month": year_month})
                     if calendar_serializer.is_valid():
                         new_calendar_id = calendar_serializer.save(member=member_instance).calendar_id
-                        print(new_calendar_id)
                         new_harucalendar_instance = get_object_or_404(Harucalendar, calendar_id=new_calendar_id)
                         sticker_serializer = HarucalendarStickerCreateSerializer(data=sticker_data)
                         if sticker_serializer.is_valid():
