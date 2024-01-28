@@ -21,7 +21,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 2. 각 호출자가 기본 매개변수를 전달할 필요가 없도록 환경 변수의 체계 기반 조회를 제공합니다.
 라고 번역하니 나와있는데, 무슨말인지 생각해보니 환경변수를 불러올 수 있는 상태로 세팅한다고
 이해했다. 
-
 '''
 env = environ.Env(DEBUG=(bool, True))
 
@@ -66,7 +65,6 @@ INSTALLED_APPS = [
     'storages',
     'static',
     'whitenoise',
-    'django_prometheus',
 
 ]
 
@@ -134,13 +132,19 @@ TEMPLATES = [
 ]
 
 ASGI_APPLICATION = 'config.asgi.application'
-# CHHANNEL_LAYERS = {
-#
+# Channels
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
 WSGI_APPLICATION = 'config.wsgi.application'
-#
+
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -170,9 +174,8 @@ DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.sqlite3',
 #         'NAME': BASE_DIR / 'db.sqlite3',
-#         }
+#     }
 # }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -216,6 +219,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 DALLE_API_KEY = env('DALLE_API_KEY')
+
 
 # AWS S3 설정
 AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')

@@ -18,7 +18,6 @@ class SignUpView(APIView):
         serializer = MemberSerializer(data=request.data)
         if serializer.is_valid():
             response_data = serializer.save()
-
             if response_data == {
                 "code": "M001",
                 "status": 201,
@@ -36,16 +35,12 @@ class LogInView(APIView):
         responses={"200": PostLoginResponseSerializer}
     )
     def post(self, request):
-        client_ip = request.META.get('REMOTE_ADDR', None)
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
         serializer = SignSerializer(data=request.data)
         if serializer.is_valid():
             # serializer에서 유효성 검사를 통과한 경우
 
             member_id = serializer.validated_data['member_id']
             nickname = serializer.validated_data['nickname']
-
 
             # 로그인 성공
             request.session['member_id'] = member_id
@@ -61,7 +56,6 @@ class LogInView(APIView):
         else:
             # serializer에서 유효성 검사를 통과하지 못한 경우
             error_message = None
-
             non_field_errors = serializer.errors.get('non_field_errors', None)
             if non_field_errors:
                 error_message = non_field_errors[0]
