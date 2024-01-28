@@ -64,7 +64,6 @@ services:
     networks:
       - haru
 
-
   backend:
     build:
       context: ../backend
@@ -94,8 +93,6 @@ services:
       - db
     networks:
       - haru
-
-
 
   rabbitmq:
     image: "rabbitmq:3.12.12-management"
@@ -137,75 +134,12 @@ services:
     networks:
       - haru
 
-
   redis:
     image: "redis:latest"
     container_name: redis
     ports:
       - "6379:6379"  # Redis 서버에 접근하기 위한 포트
     restart: always
-    networks:
-      - haru
-
-  prometheus:
-    container_name: prometheus
-    image: prom/prometheus
-    restart: 'always'
-    volumes:
-      - ./monitoring/prometheus:/etc/prometheus
-      - ./monitoring/prometheus/prometheus.yml:/prometheus/prometheus.yml:ro
-    ports:
-      - 9090:9090
-    command:
-      - '--web.enable-lifecycle'
-      - '--config.file=/etc/prometheus/prometheus.yml'
-    networks:
-      - haru
-
-  grafana:
-    container_name: grafana
-    image: grafana/grafana
-    environment:
-      GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource"
-      GF_AUTH_ANONYMOUS_ENABLED: 'true'
-      GF_AUTH_ANONYMOUS_ORG_ROLE: 'Admin'
-      GF_AUTH_DISABLE_LOGIN_FORM: 'true'
-    restart: 'always'
-    volumes:
-      - ./monitoring/grafana:/var/lib/grafana
-      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
-    ports:
-      - 3000:3000
-    depends_on:
-      - prometheus
-    networks:
-      - haru
-
-  node-exporter:
-    container_name: node-exporter
-    image: prom/node-exporter
-    ports:
-      - 9100:9100
-    networks:
-      - haru
-
-  cadvisor: #docker health check 해보기, 컨테이너 순서를 보장
-    container_name: cadvisor
-    image: gcr.io/cadvisor/cadvisor:v0.46.0
-    privileged: true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro # 이 부분이 없으면 cadvisor에서 docker container를 잡지 못하는 것 같음.
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro # cadvisor 배포 깃허브 페이지를 보고 추가
-      - /etc/machine-id:/etc/machine-id:ro # Failed to get system UUID: open /etc/machine-id: no such file or directory 해결책
-    ports:
-      - 8080:8080
-    devices:
-      - /dev/kmsg:/dev/kmsg
     networks:
       - haru
 
