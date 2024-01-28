@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>WebSocket Test</title>
+</head>
+<body>
+    <h1>WebSocket Test</h1>
+
+    <textarea id="messageInput" rows="3" placeholder="Type a message..."></textarea>
+    <button onclick="sendMessage()">Send Message</button>
+
+    <script>
+        const diaryId = 1;  // Replace with your actual diary ID
+        const socket = new WebSocket(`ws://${window.location.host}/ws/harurooms/${diaryId}/`);
+
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            console.log('Received message:', data);
+        };
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value;
+            const messageType = "image_dragdrop";  // Replace with the desired message type
+
+            const data = {
+                type: messageType,
+                x: 100,  // Replace with actual values
+                y: 150,
+                width: 200,
+                height: 100,
+                rotate: 30,
+                image_url: "This is the dropped text",
+                image_box_id: 1
+            };
+
+            socket.send(JSON.stringify(data));
+        }
+    </script>
+</body>
+</html>

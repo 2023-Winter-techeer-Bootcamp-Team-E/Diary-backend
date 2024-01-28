@@ -2,7 +2,6 @@ from diary import serializers
 from rest_framework import serializers
 
 
-
 class DiaryTextBoxGetSerializer(serializers.Serializer):
     textbox_id = serializers.IntegerField()
     writer = serializers.CharField()
@@ -11,14 +10,13 @@ class DiaryTextBoxGetSerializer(serializers.Serializer):
     ycoor = serializers.IntegerField()
     width = serializers.IntegerField()
     height = serializers.IntegerField()
-    rotate = serializers.IntegerField()
 
 
 class DiaryStickerGetSerializer(serializers.Serializer):
     sticker_id = serializers.IntegerField()
     sticker_image_url = serializers.CharField()
-    xcoor = serializers.IntegerField()
-    ycoor = serializers.IntegerField()
+    top = serializers.IntegerField()
+    left = serializers.IntegerField()
     width = serializers.IntegerField()
     height = serializers.IntegerField()
     rotate = serializers.IntegerField()
@@ -27,6 +25,7 @@ class DiaryStickerGetSerializer(serializers.Serializer):
 class SwaggerDiaryCreateRequestSerializer(serializers.Serializer):
     day = serializers.CharField()
     diary_bg_id = serializers.IntegerField()
+
 
 class SwaggerDiaryCreateResponseSerializer(serializers.Serializer):
     diary_id = serializers.IntegerField()
@@ -47,6 +46,7 @@ class DiaryGetRequestSerializer(serializers.Serializer):
 
 class DiaryLinkRequestSerializer(serializers.Serializer):
     day = serializers.CharField(required=True)
+
 
 class DiaryLinkResponseSerializer(serializers.Serializer):
     diary_id = serializers.IntegerField()
@@ -82,8 +82,8 @@ class TextBoxPutRequestSerializer(serializers.Serializer):
 
 class StickerPutRequestSerializer(serializers.Serializer):
     sticker_image_url = serializers.URLField()
-    xcoor = serializers.IntegerField()
-    ycoor = serializers.IntegerField()
+    top = serializers.IntegerField()
+    left = serializers.IntegerField()
     height = serializers.IntegerField()
     width = serializers.IntegerField()
     rotate = serializers.IntegerField()
@@ -109,3 +109,14 @@ class DiaryStickerGetResponseSerializer(serializers.Serializer):
     status = serializers.CharField()
     message = serializers.CharField()
     data = serializers.DictField(child=serializers.ListField(child=serializers.CharField()))
+
+
+class SwaggerHaruRoomRequestSerializer(serializers.Serializer):
+    diary_id = serializers.IntegerField()
+
+
+class SwaggerHaruRoomResponseSerializer(serializers.Serializer):
+    diary_bg_id = serializers.CharField()
+    day = serializers.CharField()
+    diaryTextBoxs = DiaryTextBoxGetSerializer(many=True)
+    diaryStickers = DiaryStickerGetSerializer(many=True)
