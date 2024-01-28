@@ -1,7 +1,11 @@
 import boto3
 from collections import Counter
 import requests
+from celery.app import task
+
 from .tasks import generate_sticker_image, remove_background
+from celery import group
+from celery import signature
 
 
 def extract_top_keywords(diary_text):
@@ -9,14 +13,13 @@ def extract_top_keywords(diary_text):
     from datetime import time as datetime_time
     start_time = time.time()
 
-
     comprehend_client = boto3.client('comprehend', region_name='ap-northeast-2')
 
     cleaned_text = preprocess_diary_text(diary_text)
     response = comprehend_client.detect_key_phrases(
-            Text=cleaned_text,
-            LanguageCode='ko'
-        )
+        Text=cleaned_text,
+        LanguageCode='ko'
+    )
 
     keywords = [phrase['Text'] for phrase in response['KeyPhrases']]
     stopwords = get_korean_stopwords()
@@ -35,7 +38,6 @@ def extract_top_keywords(diary_text):
 def preprocess_diary_text(diary_text):
     cleaned_text = ''.join(char for char in diary_text if char.isalnum() or char.isspace())
     return cleaned_text
-
 
 
 def get_korean_stopwords():
@@ -365,23 +367,35 @@ def get_korean_stopwords():
     return stopwords
 
 
-def generate_sticker_images(keywords):
 
+
+def generate_sticker_image_wrapper(keyword):
+    # 키워드를 리스트로 감싸서 apply_async에 전달
+    result = generate_sticker_image.apply_async(args=[keyword])
+    return keyword, result
+
+
+
+def remove_background_wrapper(result):
+    keyword, task_result = result
+    image_data = requests.get(task_result.get()).content
+    output_data = remove_background.apply_async(args=[image_data]).get()
+    return keyword, output_data
+
+
+def generate_sticker_images(keywords):
     sticker_image_urls = {}
 
-    tasks = []
+    # generate_sticker_image 함수를 순차적으로 호출하여 이미지 생성
     for keyword in keywords:
-        task = generate_sticker_image.delay(keyword)
-        tasks.append((keyword, task))
-
-    for keyword, task in tasks:
-
-        result = task.get()  # 대기하면서 결과 가져오기
-
-        response = requests.get(result)
+        generated_image_url = generate_sticker_image(keyword)
+        response = requests.get(generated_image_url)
         image_data = response.content
-        output_data = remove_background.delay(image_data).get()
 
-        sticker_image_urls[keyword] = output_data
+        # remove_background 함수를 호출하여 배경 제거
+        processed_image_data = remove_background(image_data)
+
+        sticker_image_urls[keyword] = processed_image_data
 
     return sticker_image_urls
+
