@@ -27,11 +27,6 @@ from datetime import datetime
 
 # Create your views here.
 
-
-def room(request, diaryid):
-    return render(request, "room.html", {"diaryid": diaryid})
-
-
 class Diaries(APIView):
     # 일기장 조회
     @swagger_auto_schema(
@@ -172,15 +167,13 @@ class DiariesSave(APIView):
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
 
-
 # 일기장 링크공유
 class DiaryManager(APIView):
     @swagger_auto_schema(operation_summary="작성중인 일기 링크 조회",
                          operation_description="작성중인 일기의 링크 및 diary_id, day, nickname, sns_lin 반환",
                          query_serializer=DiaryLinkRequestSerializer,
                          responses={200: DiaryLinkGetResponseSerializer})
-
-    def get(request):
+    def get(self, request):
 
         nickname = request.session.get('nickname')
         calendar_id = request.session.get('calendar_id')
