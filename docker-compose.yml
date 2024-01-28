@@ -64,7 +64,6 @@ services:
     networks:
       - haru
 
-
   backend:
     build:
       context: ../backend
@@ -94,8 +93,6 @@ services:
       - db
     networks:
       - haru
-
-
 
   rabbitmq:
     image: "rabbitmq:3.12.12-management"
@@ -137,7 +134,6 @@ services:
     networks:
       - haru
 
-
   redis:
     image: "redis:latest"
     container_name: redis
@@ -146,65 +142,6 @@ services:
     restart: always
     networks:
       - haru
-
-  prometheus:
-    container_name: prometheus
-    image: prom/prometheus
-    restart: 'always'
-    volumes:
-      - ./prometheus:/etc/prometheus
-      - ./prometheus/prometheus.yml:/prometheus/prometheus.yml:ro
-    ports:
-      - 9090:9090
-    command:
-      - '--web.enable-lifecycle'
-      - '--config.file=/etc/prometheus/prometheus.yml'
-    networks:
-      - haru
-
-  grafana:
-    container_name: grafana
-    image: grafana/grafana
-    environment:
-      GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource"
-      GF_AUTH_ANONYMOUS_ENABLED: 'true'
-      GF_AUTH_ANONYMOUS_ORG_ROLE: 'Admin'
-      GF_AUTH_DISABLE_LOGIN_FORM: 'true'
-    restart: 'always'
-    volumes:
-      - ./grafana:/var/lib/grafana
-      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
-    ports:
-      - 3000:3000
-    depends_on:
-      - prometheus
-    networks:
-      - haru
-
-#  nginx-prometheus-exporter:
-#    image: nginx/nginx-prometheus-exporter:latest
-#    ports:
-#      - "9113:9113"
-#    command:
-#      - --nginx.scrape-uri=http://nginx:80/metrics
-#      - --web.telemetry-path=/metrics
-#    depends_on:
-#      - nginx
-#    networks:
-#      - haru
-
-  telegraf:
-    image: telegraf:latest
-    container_name: telegraf
-    volumes:
-      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
-    networks:
-      - haru
-    depends_on:
-      - prometheus
-    restart: always
-    command: [ "telegraf", "--config", "/etc/telegraf/telegraf.conf" ]
 
 networks:
   haru:
