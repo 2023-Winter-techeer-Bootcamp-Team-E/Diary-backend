@@ -5,10 +5,9 @@ from rest_framework.response import Response
 
 from .serializers import MemberSerializer, SignSerializer
 from .swagger_serializers import *
-import logging
+
 from datetime import datetime
 
-logger = logging.getLogger(__name__)
 
 class SignUpView(APIView):
     @swagger_auto_schema(
@@ -16,25 +15,19 @@ class SignUpView(APIView):
         responses={"201": PostSignupResponseSerializer}
     )
     def post(self, request):
-        client_ip = request.META.get('REMOTE_ADDR', None)
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         serializer = MemberSerializer(data=request.data)
         if serializer.is_valid():
             response_data = serializer.save()
-
 
             if response_data == {
                 "code": "M001",
                 "status": 201,
                 "message": "회원가입 완료"
             }:
-                logger.info(f'{client_ip}-[{current_time}] "POST", "/members" 201 회원가입 성공 ')
                 return Response(response_data, status=201)
             else:
-                logger.error(f'{client_ip}-[{current_time}] "POST", "/members" 201 회원가입 실패')
                 return Response(response_data, status=400)
         return Response(serializer.errors, status=400)
-
 
 
 class LogInView(APIView):
@@ -53,14 +46,10 @@ class LogInView(APIView):
             member_id = serializer.validated_data['member_id']
             nickname = serializer.validated_data['nickname']
 
-            logger.info(f'{client_ip}-[{current_time}] "POST", "/members" 200  member: {member_id}, nickname: {nickname}, 로그인 성공 ')
 
             # 로그인 성공
             request.session['member_id'] = member_id
             request.session['nickname'] = nickname
-
-
-
 
             response_data = {
                 "code": "A001",
@@ -84,7 +73,6 @@ class LogInView(APIView):
                 "data": error_message
             }
             response_status = status.HTTP_400_BAD_REQUEST
-            logger.error(f'{client_ip}-[{current_time}] "POST", "/members",401, "/mebers/login"  로그인 실패: {error_message} ')
 
         response = Response(response_data, status=response_status)
         return response
@@ -95,11 +83,6 @@ class LogOutView(APIView):
         responses={"200": PostLogoutResponseSerializer}
     )
     def post(self, request):
-        client_ip = request.META.get('REMOTE_ADDR', None)
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        member_id = request.session.get('member_id')
-        nickname=request.session.get('nickname')
-        logger.info(f'{client_ip}-[{current_time}] "POST", "/members" 200  member: {member_id}, nickname: {nickname}, 로그아웃 성공 ')
         request.session.flush()
         return Response(
             {
