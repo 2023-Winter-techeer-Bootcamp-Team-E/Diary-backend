@@ -4,8 +4,6 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-
-import member
 from member.models import Member
 from .models import Diary
 from .serializers import (DiaryDetailSerializer, DiarySnsLinkSerializer,
@@ -14,20 +12,17 @@ from .serializers import (DiaryDetailSerializer, DiarySnsLinkSerializer,
 from harucalendar.serializer import HarucalendarCreateSerializer
 from .utils import extract_top_keywords, generate_sticker_images
 from botocore.exceptions import NoCredentialsError
-import boto3
-import uuid
-import time
 
+import time
+from .tasks import upload_image_to_s3
 
 from .swaggerserializer import DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer, \
     DiaryTextBoxPutRequestSerializer, DiaryStickerRequestSerializer, \
     DiaryStickerGetResponseSerializer, SwaggerDiaryCreateRequestSerializer, SwaggerDiaryCreateResponseSerializer, \
     DiaryGetRequestSerializer, DiaryLinkRequestSerializer, DiaryTextBoxPutResponseSerializer
 
-import logging
 from datetime import datetime
 
-logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -40,20 +35,15 @@ class Diaries(APIView):
         responses={200: DiaryGetResponseSerializer}
     )
     def get(self, request):
-        client_ip = request.META.get('REMOTE_ADDR', None)
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        member_id = request.session.get('member_id')
-        nickname = request.session.get('nickname')
         try:
-            day = request.GET.get('day') #swagger에서는 GET, postman은 data
+            day = request.GET.get('day')  # swagger에서는 GET, postman은 data
             calendar_id = request.session.get('calendar_id')
             found_diary = Diary.objects.get(day=day, calendar_id=calendar_id)
             request.session['diary_id'] = found_diary.diary_id
             serialized_diary = DiaryDetailSerializer(found_diary).data
-            logger.info(f'{client_ip}-[{current_time}] "GET", "/diaries" 200  member: {member_id}, nickname: {nickname}, 일기장을 조회하였습니다.. ')
+
             return Response(status=status.HTTP_200_OK, data=serialized_diary)
         except ObjectDoesNotExist:
-            logger.info(f'{client_ip}-[{current_time}] "GET", "/diaries" 404  member: {member_id}, nickname: {nickname}, 일기장이 존재하지 않습니다. ')
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
     @staticmethod
@@ -74,7 +64,6 @@ class Diaries(APIView):
         diary_bg_id = request.data.get('diary_bg_id')
 
         if member_id is None:
-            logger.info(f'{client_ip}-[{current_time}] "POST", "/diaries" 400  member: {member_id}, nickname: {nickname}, 로그인이 필요합니다. ')
             return Response({'error': '로그인이 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # 캘린더 조회는 했으나 캘린더를 안꾸미고 바로 일기를 작성하는 상남자들을 위한 부분.
@@ -84,20 +73,17 @@ class Diaries(APIView):
             member_instance = get_object_or_404(Member, member_id=member_id)
             calendar_serializer = HarucalendarCreateSerializer(data={'year_month': year_month})
             if calendar_serializer.is_valid():
-                logger.info(f'{client_ip}-[{current_time}] "POST", "/diaries" 200  member: {member_id}, nickname: {nickname}, 캘린더 생성 완료. ')
                 calendar_instance = calendar_serializer.save(member=member_instance)
                 calendar_id = calendar_instance.calendar_id
                 request.session['calendar_id'] = calendar_id  # 캘린더를 만들어주고 session에 calendar_id 최신화.
 
             else:
-                logger.error(f'{client_ip}-[{current_time}] "POST", "/diaries" 400  member: {member_id}, nickname: {nickname}, 멤버와 캘린더 값이 유효하지 않습니다.')
                 return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': '멤버와 캘린더 값이 유효하지 않습니다.'})
 
             diary_data = {'diary_bg_id': diary_bg_id, 'year_month': year_month, 'day': day}
 
             diary_serializer = DiaryCreateSerializer(data=diary_data)
             if diary_serializer.is_valid():
-                logger.info(f'{client_ip}-[{current_time}] "POST", "/diaries" 200  member: {member_id}, nickname: {nickname}, 일기 생성 완료')
                 member_object = Member.objects.get(member_id=member_id)
                 diary_instance = diary_serializer.save(calendar=calendar_instance)
                 request.session['diary_id'] = diary_instance.diary_id
@@ -114,17 +100,14 @@ class Diaries(APIView):
                 diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=data)
                 if diary_update_serializer.is_valid():
                     diary_update_serializer.save()
-                    logger.info(f'{client_ip}-[{current_time}] "POST", "/diaries" 200  member: {member_id}, nickname: {nickname}, 다이어리 저장 완료')
                     return Response(response_data, status=status.HTTP_200_OK)
                 else:
-                    logger.error(f'{client_ip}-[{current_time}] "POST", "/diaries" 400  member: {member_id}, nickname: {nickname}, snsLink가 유효하지 않습니다')
                     return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'snsLink가 유효하지 않습니다.'})
 
         if calendar_id is not None:
             diary_exist = Diary.objects.filter(calendar=calendar_id, day=day).exists()
 
             if diary_exist:
-                logger.error(f'{client_ip}-[{current_time}] "POST", "/diaries" 400  member: {member_id}, nickname: {nickname}, 해당 일에 이미 일기가 있습니다.')
                 return Response({'error': '해당 일에 이미 일기가 있습니다.'}, status=status.HTTP_400_BAD_REQUEST)
             diary_data = {'diary_bg_id': diary_bg_id, 'year_month': year_month, 'day': day}
             diary_serializer = DiaryCreateSerializer(data=diary_data)
@@ -133,7 +116,6 @@ class Diaries(APIView):
                 member_object = Member.objects.get(member_id=member_id)
                 diary_instance = diary_serializer.save(calendar_id=calendar_id)
                 request.session['diary_id'] = diary_instance.diary_id
-
 
                 sns_link = f"{request.get_host()}/ws/{diary_instance.diary_id}?type=member&member={member_id}"
                 data = {"sns_link": sns_link}
@@ -147,13 +129,10 @@ class Diaries(APIView):
                 diary_update_serializer = DiaryUpdateSerializer(diary_instance, data=data)
                 if diary_update_serializer.is_valid():
                     diary_update_serializer.save()
-                    logger.info(f'{client_ip}-[{current_time}] "POST", "/diaries" 200  member: {member_id}, nickname: {nickname}, 일기 생성완료.')
                     return Response(response_data, status=status.HTTP_200_OK)
                 else:
-                    logger.error(f'{client_ip}-[{current_time}] "POST", "/diaries" 400  member: {member_id}, nickname: {nickname}, snsLink가 유효하지 않습니다.')
                     return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'snsLink가 유효하지 않습니다.'})
             else:
-                logger.error(f'{client_ip}-[{current_time}] "POST", "/diaries" 400  member: {member_id}, nickname: {nickname}, 일기 생성 데이터가 유효하지 않습니다.')
                 return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': '일기 생성 데이터가 유효하지 않습니다.'})
 
     def request_manager(request):
@@ -170,22 +149,17 @@ class DiariesSave(APIView):
                          request_body=DiaryTextBoxPutRequestSerializer,
                          responses={200: DiaryTextBoxPutResponseSerializer},
                          )
-    def put(self, request): #캘린더 아디랑
-        client_ip = request.META.get('REMOTE_ADDR', None)
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    def put(self, request):  # 캘린더 아디랑
         nickname = request.session.get('nickname')
         member_id = request.session.get('member_id')
         diary_id = request.session.get('diary_id')
         if diary_id is None:
-            logger.error(f'{client_ip}-[{current_time}] "PUT", "/diaries" 400  member: {member_id}, nickname: {nickname}, 일기가 없습니다.')
             return Response({"error": "diary does not exist"}, status=status.status.HTTP_404_NOT_FOUND)
         if request.data is None:
-            logger.error(f'{client_ip}-[{current_time}] "PUT", "/diaries" 400  member: {member_id}, nickname: {nickname}, 일기에 들어 갈 데이터가 없습니다.')
             return Response({"error": "diary data does not exist"}, status=status.HTTP_400_BAD_REQUEST)
         try:
             diary_instance = get_object_or_404(Diary, diary_id=diary_id)
         except ObjectDoesNotExist:
-            logger.error(f'{client_ip}-[{current_time}] "PUT", "/diaries" 404  member: {member_id}, nickname: {nickname}, 일기가 없습니다.')
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
         textboxs_data = request.data.get('textboxs', [])
         stickers_data = request.data.get('stickers', [])
@@ -202,10 +176,10 @@ class DiariesSave(APIView):
                     textbox_serializer.save(diary=diary_instance)
                 else:
                     Response({"error": "textbox error"}, status=status.HTTP_404_NOT_FOUND)
-            logger.info(f'{client_ip}-[{current_time}] "PUT", "/diaries" 201  member: {member_id}, nickname: {nickname}, 일기 저장 성공.')
+
             return Response({'code': 'D001', 'status': '201', 'message': '일기장 저장 성공!'}, status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
-            logger.error(f'{client_ip}-[{current_time}] "PUT", "/diaries" 404  member: {member_id}, nickname: {nickname}, 일기가 존재하지 않습니다.')
+
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
 
@@ -250,8 +224,6 @@ class DiaryManager(APIView):
                          query_serializer=DiaryLinkRequestSerializer,
                          responses={200: DiaryLinkGetResponseSerializer})
     def get(request):
-        client_ip = request.META.get('REMOTE_ADDR', None)
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         nickname = request.session.get('nickname')
         calendar_id = request.session.get('calendar_id')
@@ -269,10 +241,8 @@ class DiaryManager(APIView):
                 'nickname': member_instance.nickname,
                 'sns_link': sns_link
             }
-            logger.info(f'{client_ip}-[{current_time}] "GET", "/diaries" 200  member: {member_id}, nickname: {nickname}, snslink 조회완료: {sns_link}.')
             return Response(response_data, status=200)
         except ObjectDoesNotExist:
-            logger.error(f'{client_ip}-[{current_time}] "GET", "/diaries" 404  member: {member_id}, nickname: {nickname}, snslink를 찾을 수 없습니다.')
             return Response({"error": "diary snsLink does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
 
@@ -301,8 +271,6 @@ class DiaryStickerManager(APIView):
                          request_body=DiaryStickerRequestSerializer,
                          responses={201: DiaryStickerGetResponseSerializer})
     def post(self, request, format=None):
-        client_ip = request.META.get('REMOTE_ADDR', None)
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         nickname = request.session.get('nickname')
         member_id = request.session.get('member_id')
         start = time.time()
@@ -331,7 +299,8 @@ class DiaryStickerManager(APIView):
             # 이미지 업로드 및 URL 반환
             uploaded_image_urls = []
             for keyword, sticker_url in sticker_image_urls.items():
-                response = self.upload_image_to_s3(sticker_url, keyword)
+                result = upload_image_to_s3.delay(sticker_url, keyword)
+                response = result.get()
                 uploaded_image_urls.append(response['image_url'])
 
             response_data = {
@@ -344,10 +313,9 @@ class DiaryStickerManager(APIView):
             }
             end = time.time()
             print(f"{end - start:.5f} sec")
-            logger.info(f'{client_ip}-[{current_time}] "POST", "/diaries" 201  member: {member_id}, nickname: {nickname}, 이미지 생성 성공, {uploaded_image_urls}, 생성시간:{end - start:.5f}')
             return Response(response_data, status=201)
         except NoCredentialsError:
-            logger.error(f'{client_ip}-[{current_time}] "POST", "/diaries" 500  member: {member_id}, nickname: {nickname}, AWS credentials not available.')
+
             return Response({"message": "AWS credentials not available."}, status=500)
         except Exception as e:
             response_data = {
@@ -355,35 +323,36 @@ class DiaryStickerManager(APIView):
                 'status': '500',
                 'message': f'에러 발생: {str(e)}',
             }
-            logger.error(f'{client_ip}-[{current_time}] "POST", "/diaries" 500  member: {member_id}, nickname: {nickname}, {str(e)}')
+
             return Response(response_data, status=500)
 
-    def upload_image_to_s3(self, image_data, keyword):
-        try:
-            # AWS S3 연결
-            s3_client = boto3.client('s3', region_name='ap-northeast-2')
-
-            # 파일 이름 설정 (여기서는 UUID 사용)
-            file_name = f"{keyword.replace(' ', '_')}_{str(uuid.uuid4())}.png"
-
-            # S3 버킷에 파일 업로드
-            s3_client.put_object(
-                Body=image_data,
-                Bucket='harudiary-sticker-bucket',
-                Key=file_name,
-                ContentType='image/png',
-            )
-
-            # 업로드된 이미지의 S3 URL 반환
-            image_url = f"https://harudiary-sticker-bucket.s3.amazonaws.com/{file_name}"
-
-            return {
-                'status': 'success',
-                'message': '이미지 업로드 성공',
-                'image_url': image_url,
-            }
-        except Exception as e:
-            return {
-                'status': 'error',
-                'message': f'이미지 업로드 에러: {str(e)}',
-            }
+    # def upload_image_to_s3(self, image_data, keyword):
+    #     try:
+    #         # AWS S3 연결
+    #         s3_client = boto3.client('s3', region_name='ap-northeast-2')
+    #
+    #         # 파일 이름 설정 (여기서는 UUID 사용)
+    #
+    #         file_name = f"{keyword.replace(' ', '_')}_{str(uuid.uuid4())}.png"
+    #
+    #         # S3 버킷에 파일 업로드
+    #         s3_client.put_object(
+    #             Body=image_data,
+    #             Bucket='harudiary-sticker-bucket',
+    #             Key=file_name,
+    #             ContentType='image/png',
+    #         )
+    #
+    #         # 업로드된 이미지의 S3 URL 반환
+    #         image_url = f"https://harudiary-sticker-bucket.s3.amazonaws.com/{file_name}"
+    #
+    #         return {
+    #             'status': 'success',
+    #             'message': '이미지 업로드 성공',
+    #             'image_url': image_url,
+    #         }
+    #     except Exception as e:
+    #         return {
+    #             'status': 'error',
+    #             'message': f'이미지 업로드 에러: {str(e)}',
+    #         }
