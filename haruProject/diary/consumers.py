@@ -75,7 +75,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
         # = self.scope['user']
         data = json.loads(message['text'])
         _type = data['type']
-
+        logger.debug(f"websocket_receive: ")
         if _type == "text_input":
             text_id = data['id']
             content = data['content']

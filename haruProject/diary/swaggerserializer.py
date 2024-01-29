@@ -110,13 +110,3 @@ class DiaryStickerGetResponseSerializer(serializers.Serializer):
     message = serializers.CharField()
     data = serializers.DictField(child=serializers.ListField(child=serializers.CharField()))
 
-
-class SwaggerHaruRoomRequestSerializer(serializers.Serializer):
-    diary_id = serializers.IntegerField()
-
-
-class SwaggerHaruRoomResponseSerializer(serializers.Serializer):
-    diary_bg_id = serializers.CharField()
-    day = serializers.CharField()
-    diaryTextBoxs = DiaryTextBoxGetSerializer(many=True)
-    diaryStickers = DiaryStickerGetSerializer(many=True)
