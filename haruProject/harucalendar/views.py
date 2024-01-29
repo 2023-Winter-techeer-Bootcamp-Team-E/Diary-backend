@@ -1,4 +1,5 @@
-from drf_yasg import openapi
+import logging
+
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.generics import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
@@ -14,8 +15,11 @@ from member.models import Member
 from .swaggerserializer import HarucalendarstickerRequestSerializer, HarucalendarstickerGetResponseSerializer, \
     HarucalendarRequestSerializer, HarucalendarGetResponseSerializer, HarucalendarstickerSerializer
 
-
 from datetime import datetime
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class HarucalendarView(APIView):  # 캘린더 조회
@@ -30,7 +34,7 @@ class HarucalendarView(APIView):  # 캘린더 조회
         responses={200: HarucalendarGetResponseSerializer})
     def get(self, request):
         try:
-            year_month = request.GET.get('year_month') #postman에서는 data, swagger는 GET
+            year_month = request.GET.get('year_month')  # postman에서는 data, swagger는 GET
             print(year_month)
             member_id = request.session['member_id']
             request.session['year_month'] = year_month
@@ -64,11 +68,10 @@ class HarucalendarView(APIView):  # 캘린더 조회
                 'created_at': items.created_at
             })
 
-
-        harucalendarserializer = HarucalendarAllSerializer(harucalendar)  # 캘린더 시리얼라이징
-        request.session['calendar_id'] = harucalendarserializer.data['calendar_id']
+        harucalendar_serializer = HarucalendarAllSerializer(harucalendar)  # 캘린더 시리얼라이징
+        request.session['calendar_id'] = harucalendar_serializer.data['calendar_id']
         return Response({
-            'data': harucalendarserializer.data,
+            'data': harucalendar_serializer.data,
             'sticker_image_url': calendar_sticker_list,
             'diaries': diary_list,
         }, status=status.HTTP_200_OK)
@@ -87,39 +90,33 @@ class HarucalendarstickerView(APIView):
             member_id = request.session.get('member_id')
             calendar_id = request.session.get('calendar_id')
             year_month = request.session.get('year_month')
-            stickers_data = request.data.get('stickers', [])
-
-            for sticker_data in stickers_data:
-
-                if calendar_id is None:
-                    member_instance = get_object_or_404(Member, member_id=member_id)
-                    calendar_serializer = HarucalendarCreateSerializer(data={"year_month": year_month})
-                    if calendar_serializer.is_valid():
-                        new_calendar_id = calendar_serializer.save(member=member_instance).calendar_id
-                        new_harucalendar_instance = get_object_or_404(Harucalendar, calendar_id=new_calendar_id)
-                        sticker_serializer = HarucalendarStickerCreateSerializer(data=sticker_data)
-                        if sticker_serializer.is_valid():
-                            sticker_serializer.save(calendar=new_harucalendar_instance)
-                            request.session['calendar_id'] = new_calendar_id
-                    else:
-                        return Response(status=status.HTTP_400_BAD_REQUEST)
-
+            sticker_data = request.data.get('stickers_info')
+            logger.debug(f"m: {member_id}, c: {calendar_id}, y: {year_month}, s: {sticker_data['sticker_image_url']}")
+            if calendar_id is None:
+                member_instance = get_object_or_404(Member, member_id=member_id)
+                calendar_serializer = HarucalendarCreateSerializer(data={"year_month": year_month})
+                if calendar_serializer.is_valid():
+                    new_calendar_id = calendar_serializer.save(member=member_instance).calendar_id
+                    logger.debug(f"new_calendar_id: {new_calendar_id}")
+                    harucalendar_instance = get_object_or_404(Harucalendar, calendar_id=new_calendar_id)
                 else:
-                    harucalendar_instance = get_object_or_404(Harucalendar, calendar_id=calendar_id)
-
-                    sticker_serializer = HarucalendarStickerCreateSerializer(data=sticker_data)
-                    if sticker_serializer.is_valid():
-                        sticker_serializer.save(calendar=harucalendar_instance)
-                    else:
-                        return Response(status=status.HTTP_400_BAD_REQUEST)
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
+            if calendar_id:
+                harucalendar_instance = get_object_or_404(Harucalendar, calendar_id=calendar_id)
+                logger.debug(f"harucalendar_instance: {harucalendar_instance.calendar_id}")
         except ObjectDoesNotExist:
-            return Response({'error': '켈린더가 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': '생성불가.'}, status=status.HTTP_404_NOT_FOUND)
 
-        if calendar_id is None:
-            return Response(
-                {'calendar_id': new_calendar_id, 'year_month': year_month, 'code': 'c002', 'status': '200',
-                 'message': '스티커 추가 성공'}, status=status.HTTP_200_OK)
+        sticker_serializer = HarucalendarStickerCreateSerializer(data=sticker_data)
+        if sticker_serializer.is_valid():
+            sticker_serializer.save(calendar=harucalendar_instance)
+            logger.debug(f"sticker_serializer: {sticker_serializer.data}")
+            return Response({
+                'code': '200',
+                'status': 'OK',
+                'message': '스티커가 성공적으로 등록되었습니다.'
+            }, status=status.HTTP_200_OK)
         else:
-            return Response(
-                {'calendar_id': calendar_id, 'year_month': year_month, 'code': 'c002', 'status': '200',
-                 'message': '스티커 추가 성공'}, status=status.HTTP_200_OK)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
