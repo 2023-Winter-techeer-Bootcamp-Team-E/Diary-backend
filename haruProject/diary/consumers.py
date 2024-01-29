@@ -653,3 +653,5 @@ class HaruConsumer(AsyncWebsocketConsumer):
             DiarySticker.objects.filter(sticker_id=box_id).delete()
         if box_type == 'textbox':
             DiaryTextBox.objects.filter(textbox_id=box_id).delete()
+        if box_type == 'dalle':
+            DiarySticker.objects.filter(sticker_id=box_id).delete()
