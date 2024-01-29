@@ -35,7 +35,7 @@ class DiaryStickerModifySerializer(serializers.ModelSerializer):
 
 class DiaryTextBoxModifySerializer(serializers.ModelSerializer):
     class Meta:
-        model = DiarySticker
+        model = DiaryTextBox
         fields = ['content', 'writer', 'xcoor', 'ycoor', 'width', 'height']
 
     def create(self, validated_data):
@@ -44,11 +44,12 @@ class DiaryTextBoxModifySerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.content = validated_data.get('content', instance.content)
         instance.writer = validated_data.get('writer', instance.writer)
-        instance.xcoor = validated_data.get('x', instance.xoor)
-        instance.yoor = validated_data.get('y', instance.yoor)
+        instance.xcoor = validated_data.get('xcoor', instance.xcoor)
+        instance.ycoor = validated_data.get('ycoor', instance.ycoor)
         instance.width = validated_data.get('width', instance.width)
         instance.height = validated_data.get('height', instance.height)
         instance.save()
+        return instance
 
 
 class DiaryDetailSerializer(serializers.ModelSerializer):
