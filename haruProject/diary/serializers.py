@@ -69,15 +69,6 @@ class HaruRoomDetailSerializer(serializers.ModelSerializer):
         fields = ['diaryTextBoxs', 'diaryStickers']
 
 
-class HaruroomsSerializer(serializers.ModelSerializer):
-    diaryTextBoxs = DiaryTextBoxSerializer(many=True, read_only=True)
-    diaryStickers = DiaryStickerSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Diary
-        fields = ['diary_bg_id', 'day', 'diaryTextBoxs', 'diaryStickers']
-
-
 class DiarySnsLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Diary
@@ -97,6 +88,7 @@ class DiaryTextBoxCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = DiaryTextBox
         fields = ['writer', 'content', 'xcoor', 'ycoor', 'width', 'height', 'rotate']
+
     def create(self, validated_data):
         return DiaryTextBox.objects.create(**validated_data)
 
@@ -121,8 +113,5 @@ class DiaryUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 
-class HaruRoomSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HaruRoom
-        fields = ['room_id', 'user_count']
+
 

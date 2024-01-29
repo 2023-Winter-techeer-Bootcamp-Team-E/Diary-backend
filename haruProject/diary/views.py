@@ -8,7 +8,7 @@ from member.models import Member
 from .models import Diary
 from .serializers import (DiaryDetailSerializer, DiarySnsLinkSerializer,
                           DiaryCreateSerializer, DiaryTextBoxCreateSerializer,
-                          DiaryStickerCreateSerializer, DiaryUpdateSerializer, HaruroomsSerializer)
+                          DiaryStickerCreateSerializer, DiaryUpdateSerializer)
 from harucalendar.serializer import HarucalendarCreateSerializer
 from .utils import extract_top_keywords, generate_sticker_images
 from botocore.exceptions import NoCredentialsError
@@ -19,8 +19,7 @@ from .tasks import upload_image_to_s3
 from .swaggerserializer import DiaryGetResponseSerializer, DiaryLinkGetResponseSerializer, \
     DiaryTextBoxPutRequestSerializer, DiaryStickerRequestSerializer, \
     DiaryStickerGetResponseSerializer, SwaggerDiaryCreateRequestSerializer, SwaggerDiaryCreateResponseSerializer, \
-    DiaryGetRequestSerializer, DiaryLinkRequestSerializer, SwaggerHaruRoomRequestSerializer, \
-    SwaggerHaruRoomResponseSerializer
+    DiaryGetRequestSerializer, DiaryLinkRequestSerializer
 
 from datetime import datetime
 
@@ -175,7 +174,7 @@ class DiaryManager(APIView):
                          responses={200: DiaryLinkGetResponseSerializer})
     def get(self, request):
 
-        nickname = request.session.get('nickname')
+        # nickname = request.session.get('nickname')
         calendar_id = request.session.get('calendar_id')
         member_id = request.session.get('member_id')
         day = request.GET.get('day')
@@ -255,53 +254,3 @@ class DiaryStickerManager(APIView):
                 'message': f'에러 발생: {str(e)}',
             }
             return Response(response_data, status=500)
-          
-
-class HaruRoomManager(APIView):
-    # snslink url을 통해 들어온다
-    # 링크를 통해 접속하는 경우에는 캘린더 조회에서 diary_id, is_expiry 정보를 공유 받을 수 없다.
-    # 때문에 해당 로직에서 검증을 하고 guest에 대한 접근을 필터링 해야한다.
-    ## is_expiry==True일 때 is_expiry 에러를 반환한다.
-    ## is_expiry==False일 때 Haruroom에서 해당하는 diary_id로 접속할 수 있어야 한다.
-    ## diary_id is None: 일 때 diary is none 에러를 반환한다.
-    ## 최종 저장은 Diary_save에서 put, is_expiry를 변경한다.
-    ## 웹소켓 과정에서 textbox, sticker은 저장이 된다. 최종 저장을 put에서 진행해야 하는지 확인이 필요하다.
-
-    # ws haruroom에 접속하기 위해 diary_id가 필요하다
-    # 웹소켓에 접속할 때 기존 사용자와 같은 환경을 제공하기 위해 DB에서 데이터를 제공해야 줘야 한다.
-    # 해당 정보는 ws consumers.py or http view.py에서 진행 가능하다.
-    ## 둘 중 어디서 제공할 지는 프론트와 상의해야 한다.
-
-    # guest 비밀번호를 생성하고 guest_id가 프론트엔드에서 필요한지 상의해야 한다.
-    ## 만약 프론트엔드에서 guest_id가 필요하다면 현재 snslink url로 Haruroom으로 접근할 수 없다
-    ## guest 비밀번호 입력 -> snslink url -> class Haruroom
-    ## -> guest 저장 -> guest_id 반환 -> path variable에서 Diary_id를 통해 diary_id 유무, is_expiry에 따라 로직수행
-    ## -> Diary_id is exist, is_expiry == False일 때 최종 Response를 반환하다.
-    ### member login을 통해 들어오는 경우 link정보가 필요할까?
-    ### 만약 필요없다면 guest에서 diary_id, is_expiry 검증후 guest_id 반환
-
-    ### Response.data: ws/harurooms/diary_id;
-    ### 기존 haruroom을 http로 조회하는 경우: + Diary, diary_DiaryTextBoxs, diary_DiaryStickerBoxs
-    ### guest_id가 필요한 경우: + guest_id 반환
-
-    #### snslink: quest.host()/api/v1/harurooms/"{diary_id}"
-    @swagger_auto_schema(operation_summary="작성중인 일기 링크 조회",
-                         operation_description="작성중인 일기의 링크 및 diary_id, day, nickname, sns_lin 반환",
-                         query_serializer=SwaggerHaruRoomRequestSerializer,
-                         responses={200: SwaggerHaruRoomResponseSerializer})
-    def get(self, request, diary_id):
-        try:
-            diary_instance = Diary.objects.get(diary_id=diary_id)
-        except ObjectDoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND, data={"error": "Not Found Diary"})
-
-        if diary_instance.is_expiry:
-            return Response(status=status.HTTP_404_NOT_FOUND, data={"error": "This diary is expired"})
-
-        ws_link = f'ws/harurooms/{diary_instance.diary_id}'
-        # 웹소켓에서 http로 기존 데이터를 반환하는 경우
-        serialized_diary = HaruroomsSerializer(diary_instance).data
-        haruroom_data = {'ws_link': ws_link, 'serialized_diary': serialized_diary}
-
-        return Response(status=status.HTTP_200_OK, data=haruroom_data)
-

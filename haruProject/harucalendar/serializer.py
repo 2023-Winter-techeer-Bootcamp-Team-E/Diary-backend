@@ -23,7 +23,6 @@ class HarucalendarCreateSerializer(serializers.ModelSerializer):
         return Harucalendar.objects.create(**validated_data)
 
 
-
 class HarucalendarStickerCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Harucalendarsticker

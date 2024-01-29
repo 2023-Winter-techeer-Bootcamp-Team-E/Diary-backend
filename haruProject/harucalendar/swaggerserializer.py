@@ -11,7 +11,7 @@ class HarucalendarstickerSerializer(serializers.Serializer):
 
 
 class HarucalendarstickerRequestSerializer(serializers.Serializer):
-    stickers = serializers.ListField(child=HarucalendarstickerSerializer())
+    stickers_info = HarucalendarstickerSerializer()
 
 
 class HarucalendarstickerGetResponseSerializer(serializers.Serializer):
