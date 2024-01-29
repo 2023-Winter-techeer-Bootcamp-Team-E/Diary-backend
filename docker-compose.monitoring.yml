@@ -10,11 +10,17 @@ services:
     volumes:
       - ./monitoring/prometheus:/etc/prometheus
       - ./monitoring/prometheus/prometheus.yml:/prometheus/prometheus.yml:ro
+    links:
+      - cadvisor
     ports:
       - 9090:9090
+    depends_on:
+      - cadvisor
     command:
       - '--web.enable-lifecycle'
       - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - haru
 
   grafana:
     container_name: grafana
@@ -33,21 +39,33 @@ services:
       - 3000:3000
     depends_on:
       - prometheus
+    networks:
+      - haru
 
   node-exporter:
     container_name: node-exporter
     image: prom/node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points="^(/rootfs|/host|)/(sys|proc|dev|host|etc)($$|/)"'
     ports:
       - 9100:9100
+    networks:
+      - haru
 
   cadvisor: #docker health check 해보기, 컨테이너 순서를 보장
     container_name: cadvisor
     image: gcr.io/cadvisor/cadvisor:v0.46.0
     privileged: true
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro # 이 부분이 없으면 cadvisor에서 docker container를 잡지 못하는 것 같음.
+      - /var/run/docker.sock:/var/run/docker.sock:rw # 이 부분이 없으면 cadvisor에서 docker container를 잡지 못하는 것 같음.
       - /:/rootfs:ro
-      - /var/run:/var/run:ro
+      - /var/run:/var/run:rw
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro # cadvisor 배포 깃허브 페이지를 보고 추가
@@ -56,3 +74,9 @@ services:
       - 8080:8080
     devices:
       - /dev/kmsg:/dev/kmsg
+    networks:
+      - haru
+
+networks:
+  haru:
+    driver: bridge
