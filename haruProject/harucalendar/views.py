@@ -14,10 +14,9 @@ from member.models import Member
 from .swaggerserializer import HarucalendarstickerRequestSerializer, HarucalendarstickerGetResponseSerializer, \
     HarucalendarRequestSerializer, HarucalendarGetResponseSerializer, HarucalendarstickerSerializer
 
-import logging
+
 from datetime import datetime
 
-logger = logging.getLogger(__name__)
 
 class HarucalendarView(APIView):  # 캘린더 조회
 
@@ -68,7 +67,6 @@ class HarucalendarView(APIView):  # 캘린더 조회
 
         harucalendarserializer = HarucalendarAllSerializer(harucalendar)  # 캘린더 시리얼라이징
         request.session['calendar_id'] = harucalendarserializer.data['calendar_id']
-
         return Response({
             'data': harucalendarserializer.data,
             'sticker_image_url': calendar_sticker_list,
@@ -114,12 +112,10 @@ class HarucalendarstickerView(APIView):
                         sticker_serializer.save(calendar=harucalendar_instance)
                     else:
                         return Response(status=status.HTTP_400_BAD_REQUEST)
-
         except ObjectDoesNotExist:
             return Response({'error': '켈린더가 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
 
         if calendar_id is None:
-            print(calendar_id,new_calendar_id)
             return Response(
                 {'calendar_id': new_calendar_id, 'year_month': year_month, 'code': 'c002', 'status': '200',
                  'message': '스티커 추가 성공'}, status=status.HTTP_200_OK)

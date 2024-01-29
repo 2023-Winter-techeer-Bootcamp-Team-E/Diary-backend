@@ -5,10 +5,9 @@ from rest_framework.response import Response
 
 from .serializers import MemberSerializer, SignSerializer
 from .swagger_serializers import *
-import logging
+
 from datetime import datetime
 
-logger = logging.getLogger(__name__)
 
 class SignUpView(APIView):
     @swagger_auto_schema(
@@ -30,7 +29,6 @@ class SignUpView(APIView):
         return Response(serializer.errors, status=400)
 
 
-
 class LogInView(APIView):
     @swagger_auto_schema(
         request_body=PostLoginRequestSerializer,
@@ -43,10 +41,10 @@ class LogInView(APIView):
 
             member_id = serializer.validated_data['member_id']
             nickname = serializer.validated_data['nickname']
+
             # 로그인 성공
             request.session['member_id'] = member_id
             request.session['nickname'] = nickname
-
 
             response_data = {
                 "code": "A001",
