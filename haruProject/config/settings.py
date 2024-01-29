@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'storages',
     'static',
     'whitenoise',
+    'django_prometheus',
 
 ]
 
@@ -220,7 +221,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 DALLE_API_KEY = env('DALLE_API_KEY')
 
-
 # AWS S3 설정
 AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
@@ -295,7 +295,7 @@ LOGGING = {
             'filename': os.path.join(BASE_DIR, 'logs') + "/diary_log"
 
         },
-        'static_file':{
+        'static_file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'filename': os.path.join(BASE_DIR, 'logs') + "/static_log"
@@ -332,4 +332,3 @@ LOGGING = {
         # 좌측 코드를 추가 작성해서 사용
     }
 }
-
