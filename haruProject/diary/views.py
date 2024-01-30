@@ -36,9 +36,9 @@ class Diaries(APIView):
     )
     def get(self, request):
         try:
-            day = request.GET.get('day')  # swagger에서는 GET, postman은 data
+            diary_id = request.GET.get('diary_id')  # swagger에서는 GET, postman은 data
             calendar_id = request.session.get('calendar_id')
-            found_diary = Diary.objects.get(day=day, calendar_id=calendar_id)
+            found_diary = Diary.objects.get(diary_id=diary_id, calendar_id=calendar_id)
             request.session['diary_id'] = found_diary.diary_id
             serialized_diary = DiaryDetailSerializer(found_diary).data
             return Response(status=status.HTTP_200_OK, data=serialized_diary)
