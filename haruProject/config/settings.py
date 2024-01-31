@@ -92,10 +92,11 @@ CORS_ORIGIN_WHITELIST = [
     # for dev remove
     "http://frontend:3000",
     "http://backend:8000",
-    "http://localhost:*"
+    "http://localhost:*",
+    "https://www.haruconnection.store"
 ]
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "host.docker.internal"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "host.docker.internal", "backend", "www.haruconnection.store"]
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1",
