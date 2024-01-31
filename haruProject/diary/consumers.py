@@ -75,7 +75,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
         # = self.scope['user']
         data = json.loads(message['text'])
         _type = data['type']
-        logger.debug(f"websocket_receive: ")
+        logger.debug(f"websocket_receive: {message}")
         if _type == "text_input":
             text_id = data['id']
             content = data['content']
@@ -635,6 +635,7 @@ class HaruConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def save_textboxs(self, text_id, content, writer, x, y, width, height):
         text_box = get_object_or_404(DiaryTextBox, textbox_id=text_id)
+        logger.debug(f"save_textbox: id: {text_id} content: {content}, writer: {writer}, x: {x}, y: {y}, w: {width}, h: {height}")
         text_box_serializer = DiaryTextBoxModifySerializer(text_box, data={
             'content': content,
             'writer': writer,
