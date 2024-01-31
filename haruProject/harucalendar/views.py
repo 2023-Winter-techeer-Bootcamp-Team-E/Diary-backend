@@ -17,9 +17,7 @@ from .swaggerserializer import HarucalendarstickerRequestSerializer, Harucalenda
 
 from datetime import datetime
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class HarucalendarView(APIView):  # 캘린더 조회
@@ -33,16 +31,19 @@ class HarucalendarView(APIView):  # 캘린더 조회
         query_serializer=HarucalendarRequestSerializer,
         responses={200: HarucalendarGetResponseSerializer})
     def get(self, request):
+        client_ip = request.META.get('REMOTE_ADDR', None)
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
             year_month = request.GET.get('year_month')  # postman에서는 data, swagger는 GET
-            print(year_month)
             member_id = request.session['member_id']
             request.session['year_month'] = year_month
+
             harucalendar = Harucalendar.objects.get(member=member_id, year_month=year_month)
             request.session['calendar_id'] = harucalendar.calendar_id
 
         except ObjectDoesNotExist:
             request.session['calendar_id'] = None
+            logger.info(f'INFO {client_ip} {current_time} GET /calendars 404 Calendar does Not Existing')
             return Response({'message': '달력이 존재하지 않습니다.'},
                             status=status.HTTP_404_NOT_FOUND)
 
@@ -70,6 +71,7 @@ class HarucalendarView(APIView):  # 캘린더 조회
 
         harucalendar_serializer = HarucalendarAllSerializer(harucalendar)  # 캘린더 시리얼라이징
         request.session['calendar_id'] = harucalendar_serializer.data['calendar_id']
+        logger.info(f'INFO {client_ip} {current_time} GET /calendars 200 calendar is inquired')
         return Response({
             'data': harucalendar_serializer.data,
             'sticker_image_url': calendar_sticker_list,
@@ -84,6 +86,8 @@ class HarucalendarstickerView(APIView):
         request_body=HarucalendarstickerRequestSerializer,
         responses={200: HarucalendarstickerGetResponseSerializer})
     def post(self, request):
+        client_ip = request.META.get('REMOTE_ADDR', None)
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         new_calendar_id = None  # 초기화 추가
 
         try:
@@ -91,32 +95,38 @@ class HarucalendarstickerView(APIView):
             calendar_id = request.session.get('calendar_id')
             year_month = request.session.get('year_month')
             sticker_data = request.data.get('stickers_info')
-            logger.debug(f"m: {member_id}, c: {calendar_id}, y: {year_month}, s: {sticker_data['sticker_image_url']}")
+
             if calendar_id is None:
                 member_instance = get_object_or_404(Member, member_id=member_id)
                 calendar_serializer = HarucalendarCreateSerializer(data={"year_month": year_month})
                 if calendar_serializer.is_valid():
                     new_calendar_id = calendar_serializer.save(member=member_instance).calendar_id
-                    logger.debug(f"new_calendar_id: {new_calendar_id}")
                     harucalendar_instance = get_object_or_404(Harucalendar, calendar_id=new_calendar_id)
                 else:
+                    print(calendar_serializer.errors)
+                    logger.warning(f'WARNING {client_ip} {current_time} POST /calendars 400 calendar Bad Request')
                     return Response(status=status.HTTP_400_BAD_REQUEST)
-            if calendar_id:
+            else:
+                print(calendar_id)
                 harucalendar_instance = get_object_or_404(Harucalendar, calendar_id=calendar_id)
-                logger.debug(f"harucalendar_instance: {harucalendar_instance.calendar_id}")
+
         except ObjectDoesNotExist:
+            logger.warning(f'WARNING {client_ip} {current_time} POST /calendars 404 Not Found')
             return Response({'error': '생성불가.'}, status=status.HTTP_404_NOT_FOUND)
 
         sticker_serializer = HarucalendarStickerCreateSerializer(data=sticker_data)
         if sticker_serializer.is_valid():
             sticker_serializer.save(calendar=harucalendar_instance)
             logger.debug(f"sticker_serializer: {sticker_serializer.data}")
+            logger.info(f'INFO {client_ip} {current_time} POST /calendars 200 calendar Stickers are saved')
             return Response({
                 'code': '200',
                 'status': 'OK',
                 'message': '스티커가 성공적으로 등록되었습니다.'
             }, status=status.HTTP_200_OK)
         else:
+            print(sticker_serializer.errors)
+            logger.warning(f'WARNING {client_ip} {current_time} POST /calendars 400  Stickers arent saved')
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 

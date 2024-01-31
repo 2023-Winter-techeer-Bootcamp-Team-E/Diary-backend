@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'storages',
     'static',
     'whitenoise',
+    'django_prometheus',
 
 ]
 
@@ -85,15 +86,13 @@ MIDDLEWARE = [
 
 # CORS 설정 - whitelist 에 추가된 주소 접근 허용
 CORS_ORIGIN_WHITELIST = [
-    "https://127.0.0.1:3000",  # for dev remove
     "http://127.0.0.1:8000",
     # for dev remove
-    "http://frontend:3000",
     "http://backend:8000",
-    "http://localhost:*"
+    "https://www.haruconnection.store"
 ]
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "host.docker.internal"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "host.docker.internal", "backend", "www.haruconnection.store"]
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1",
@@ -219,7 +218,6 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 DALLE_API_KEY = env('DALLE_API_KEY')
-
 
 # AWS S3 설정
 AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')

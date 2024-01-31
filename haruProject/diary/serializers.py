@@ -18,7 +18,7 @@ class DiaryStickerSerializer(serializers.ModelSerializer):
 class DiaryStickerModifySerializer(serializers.ModelSerializer):
     class Meta:
         model = DiarySticker
-        fields = ['sticker_image_url', 'top', 'ycoor', 'left', 'height', 'rotate']
+        fields = ['sticker_image_url', 'top', 'left', 'height', 'rotate']
 
     def create(self, validated_data):
         return DiarySticker.objects.create(**validated_data)
@@ -31,6 +31,7 @@ class DiaryStickerModifySerializer(serializers.ModelSerializer):
         instance.height = validated_data.get('height', instance.height)
         instance.rotate = validated_data.get('rotate', instance.rotate)
         instance.save()
+        return instance
 
 
 class DiaryTextBoxModifySerializer(serializers.ModelSerializer):
