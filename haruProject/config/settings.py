@@ -278,12 +278,17 @@ LOGGING = {
         'member_handler': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': './logs/memberapi.log'
+            'filename': './logs/backend.log'
         },
         'calendar_handler': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': './logs/calendarapi.log'
+            'filename': './logs/backend.log'
+        },
+        'diary_handler':{
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': './logs/backend.log'
         }
     },
     'loggers': {
@@ -302,5 +307,10 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True
         },
+        'diary':{
+            'handlers': ['diary_handler'],
+            'level':'INFO',
+            'propagate': True
+        }
     }
 }
