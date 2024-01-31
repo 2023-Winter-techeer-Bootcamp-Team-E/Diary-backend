@@ -1,4 +1,7 @@
+from calendar import Calendar
+
 from django.core.exceptions import ObjectDoesNotExist
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.views import APIView
 from rest_framework import status
@@ -6,6 +9,8 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from member.models import Member
 from .models import Diary
+from harucalendar.models import Harucalendar
+from member.models import Member
 from .serializers import (DiaryDetailSerializer, DiarySnsLinkSerializer,
                           DiaryCreateSerializer, DiaryTextBoxCreateSerializer,
                           DiaryStickerCreateSerializer, DiaryUpdateSerializer)
@@ -26,31 +31,44 @@ from datetime import datetime
 
 # Create your views here.
 
-class Diaries(APIView):
+class DiariesGet(APIView):
     # 일기장 조회
     @swagger_auto_schema(
         operation_description="일기에 연동 된 텍스트박스,스티커 등등 출력<br>1.해당달에 존재 하는 전반적인 일기 목록은 캘린더 조회에서 확인<br> 2.일기의 세부 내용(스티커,텍스트박스 등) 출력",
         operation_summary="일기 조회",
-        query_serializer=DiaryGetRequestSerializer,
+        #query_serializer=DiaryGetRequestSerializer,
         responses={200: DiaryGetResponseSerializer}
     )
-    def get(self, request):
+    def get(self, request, diary_id):
         try:
-            diary_id = request.GET.get('diary_id')  # swagger에서는 GET, postman은 data
-            calendar_id = request.session.get('calendar_id')
-            found_diary = Diary.objects.get(diary_id=diary_id, calendar_id=calendar_id)
-            request.session['diary_id'] = found_diary.diary_id
-            serialized_diary = DiaryDetailSerializer(found_diary).data
-            return Response(status=status.HTTP_200_OK, data=serialized_diary)
+            # day = request.GET.get('day')  # swagger에서는 GET, postman은 data
+            # calendar_id = request.session.get('calendar_id')
+            # found_diary = Diary.objects.get(day=day, calendar_id=calendar_id)
+            # request.session['diary_id'] = found_diary.diary_id
+
+            diary_instance = Diary.objects.get(pk=diary_id)
+            calendar_id = diary_instance.calendar_id
+            calendar_instance = Harucalendar.objects.get(pk=calendar_id)
+            member_id = calendar_instance.member_id
+            member_instance = Member.objects.get(pk=member_id)
+            nickname = member_instance.nickname
+            serialized_diary = DiaryDetailSerializer(diary_instance).data
+            # 출력값에 nickname, day 출력, 임시코드이고 추후 깔끔하게 리펙터링 하겠음-우성-
+
+            return Response(status=status.HTTP_200_OK, data={"diart_data":serialized_diary, "day": diary_instance.day, "nickname":nickname})
         except ObjectDoesNotExist:
             return Response({"error": "diary does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
+class DiariesPost(APIView):
     @staticmethod
     @swagger_auto_schema(
         operation_description="일기 배경지 고르기<br>1.일기배경지 고르기<br> 2.sns링크 반환",
         operation_summary="일기초안 생성(배경지 고르기)",
         request_body=SwaggerDiaryCreateRequestSerializer,
-        responses={200: SwaggerDiaryCreateResponseSerializer})
+        responses={200: SwaggerDiaryCreateResponseSerializer},
+        manual_parameters=[
+            openapi.Parameter('diary_id', openapi.IN_QUERY, description="Diary ID", type=openapi.TYPE_INTEGER,required=False),]
+    )
     def post(request):
         # calendar_id,year_month,member_id만 세션으로 받고, day만 request로 받을거임
         calendar_id = request.session.get('calendar_id')
