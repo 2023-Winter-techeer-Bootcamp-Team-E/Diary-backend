@@ -3,15 +3,15 @@ from rest_framework import serializers
 
 class HarucalendarstickerSerializer(serializers.Serializer):
     sticker_image_url = serializers.CharField()
-    xcoor = serializers.IntegerField()
-    ycoor = serializers.IntegerField()
+    top = serializers.IntegerField()
+    left = serializers.IntegerField()
     height = serializers.IntegerField()
     rotate = serializers.IntegerField()
     width = serializers.IntegerField()
 
 
 class HarucalendarstickerRequestSerializer(serializers.Serializer):
-    stickers = serializers.ListField(child=HarucalendarstickerSerializer())
+    stickers_info = HarucalendarstickerSerializer()
 
 
 class HarucalendarstickerGetResponseSerializer(serializers.Serializer):

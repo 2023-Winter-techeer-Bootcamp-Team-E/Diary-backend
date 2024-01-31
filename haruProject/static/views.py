@@ -18,10 +18,6 @@ class StaticImageView(APIView):
     @swagger_auto_schema(query_serializer=StaticImageRequestSerializer,
                          responses={200: StaticImageGetResponseSerializer})
     def get(request):
-        client_ip = request.META.get('REMOTE_ADDR', None)
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        nickname = request.session.get('nickname')
-        member_id = request.session.get('member_id')
         try:
             size = 6  # Default size : 6, 한 페이지 당 6개의 스티커 이미지
             page_number = request.GET.get('page', 1)
@@ -33,7 +29,6 @@ class StaticImageView(APIView):
             except PageNotAnInteger:
                 page_objects = paginator.page(1)
             except EmptyPage:
-                logger.error(f'{client_ip}-[{current_time}] "GET", "/static" 404  member: {member_id}, nickname: {nickname}, No more pages. ')
                 return Response({'error': 'No more pages'}, status=400)
 
             serialized_objects = StaticImageSerializer(page_objects, many=True).data
@@ -45,9 +40,8 @@ class StaticImageView(APIView):
                     'st_image_urls': st_image_urls,
                 }
             }
-            logger.error(f'{client_ip}-[{current_time}] "GET", "/static" 200  member: {member_id}, nickname: {nickname}, 배경조회 성공')
+
             return Response(response_data, status=200)
 
         except Exception as e:
-            logger.error(f'{client_ip}-[{current_time}] "GET", "/static" 500  member: {member_id}, nickname: {nickname}, {str(e)}')
             return Response({'error': str(e)}, status=500)

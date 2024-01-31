@@ -1,7 +1,11 @@
 import boto3
 from collections import Counter
 import requests
+from celery.app import task
+
 from .tasks import generate_sticker_image, remove_background
+from celery import group
+from celery import signature
 
 
 def extract_top_keywords(diary_text):
@@ -9,14 +13,13 @@ def extract_top_keywords(diary_text):
     from datetime import time as datetime_time
     start_time = time.time()
 
-
     comprehend_client = boto3.client('comprehend', region_name='ap-northeast-2')
 
     cleaned_text = preprocess_diary_text(diary_text)
     response = comprehend_client.detect_key_phrases(
-            Text=cleaned_text,
-            LanguageCode='ko'
-        )
+        Text=cleaned_text,
+        LanguageCode='ko'
+    )
 
     keywords = [phrase['Text'] for phrase in response['KeyPhrases']]
     stopwords = get_korean_stopwords()
@@ -35,7 +38,6 @@ def extract_top_keywords(diary_text):
 def preprocess_diary_text(diary_text):
     cleaned_text = ''.join(char for char in diary_text if char.isalnum() or char.isspace())
     return cleaned_text
-
 
 
 def get_korean_stopwords():
@@ -191,6 +193,7 @@ def get_korean_stopwords():
         "날짜 관련 용어",
         "내일", "일주일", "한달", "내일 모레", "글피",
         "오늘", "어제", "내일 모레", "내일 내일", "그제",
+        "오늘은", "내일은",
         "몇일 후", "몇주 후", "몇달 후", "몇년 후", "몇일 전",
         "몇주 전", "몇달 전", "몇년 전", "지난주", "이번주",
         "다음주", "지난달", "이번달", "다음달", "작년",
@@ -225,7 +228,10 @@ def get_korean_stopwords():
         "이것", "누구", "저", "여기", "어디", "너", "뭐", "당신", "거기",
         "이곳", "그곳", "제", "아무", "네", "자네", "언제", "여러분", "이거",
         "너희", "니", "저희", "아무개", "이놈", "그놈", "저기", "그분", "그대",
-        "그거", "모", "저쪽", "뭣", "저것", "그이", "이쪽", "그쪽", "지",
+        "그거", "모", "저쪽", "뭣", "저것", "그이", "이쪽", "그쪽", "지", "친구", "친구들",
+        "엄마랑",  "엄마", "아빠랑", "아빠", "가족들", "가족", "할머니", "할아버지",
+        "사촌동생", "사촌", "동생", "이미지", "월요일인 오늘", "화요일인 오늘", "수요일인 오늘",
+        "목요일인 오늘", "금요일인 오늘", "토요일인 오늘", "일요일인 오늘", "주말이라", "주말", "주말에",
         "얘", "걔", "저편", "저놈", "네놈", "그네", "쇤네", "아니", "이", '지우', '민준', '서윤', '서준', '서연', '민준', '도윤', '지우', '서준', '예준',
         '서현', '서연', '시우', '하윤', '도윤', '하준', '하은', '민서', '하윤', '지후',
         '윤서', '연우', '준우', '채원', '서현', '준서', '지민', '지안', '하은', '선우',
@@ -361,27 +367,39 @@ def get_korean_stopwords():
         "남양주", "의왕", "하남", "용인", "안성", "양평",
         "여주", "가평", "연천", "포천", "최근", "일본"
 
-    ]
+]
     return stopwords
 
 
-def generate_sticker_images(keywords):
 
+
+def generate_sticker_image_wrapper(keyword):
+    # 키워드를 리스트로 감싸서 apply_async에 전달
+    result = generate_sticker_image.apply_async(args=[keyword])
+    return keyword, result
+
+
+
+def remove_background_wrapper(result):
+    keyword, task_result = result
+    image_data = requests.get(task_result.get()).content
+    output_data = remove_background.apply_async(args=[image_data]).get()
+    return keyword, output_data
+
+
+def generate_sticker_images(keywords):
     sticker_image_urls = {}
 
-    tasks = []
+    # generate_sticker_image 함수를 순차적으로 호출하여 이미지 생성
     for keyword in keywords:
-        task = generate_sticker_image.delay(keyword)
-        tasks.append((keyword, task))
-
-    for keyword, task in tasks:
-
-        result = task.get()  # 대기하면서 결과 가져오기
-
-        response = requests.get(result)
+        generated_image_url = generate_sticker_image(keyword)
+        response = requests.get(generated_image_url)
         image_data = response.content
-        output_data = remove_background.delay(image_data).get()
 
-        sticker_image_urls[keyword] = output_data
+        # remove_background 함수를 호출하여 배경 제거
+        processed_image_data = remove_background(image_data)
+
+        sticker_image_urls[keyword] = processed_image_data
 
     return sticker_image_urls
+

@@ -21,7 +21,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 2. 각 호출자가 기본 매개변수를 전달할 필요가 없도록 환경 변수의 체계 기반 조회를 제공합니다.
 라고 번역하니 나와있는데, 무슨말인지 생각해보니 환경변수를 불러올 수 있는 상태로 세팅한다고
 이해했다. 
-
 '''
 env = environ.Env(DEBUG=(bool, True))
 
@@ -135,23 +134,29 @@ TEMPLATES = [
 ]
 
 ASGI_APPLICATION = 'config.asgi.application'
-# CHHANNEL_LAYERS = {
-#
+# Channels
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
 WSGI_APPLICATION = 'config.wsgi.application'
-#
+
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'haru',
-        'USER': 'root',
-        'PASSWORD': '12345678',
-        'HOST': 'db',
-        'PORT': '3306',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'haru',
+#         'USER': 'root',
+#         'PASSWORD': '12345678',
+#         'HOST': 'db',
+#         'PORT': '3306',
+#     }
+# }
 
 # RDS 설정
 # DATABASES = {
@@ -167,13 +172,12 @@ DATABASES = {
 #
 
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#         }
-# }
-
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -258,75 +262,56 @@ CELERY_ENABLE_UTC = False
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,  # 디폴트 : True, 장고의 디폴트 로그 설정을 대체. / False : 장고의 디폴트 로그 설정의 전부 또는 일부를 다시 정의
-    'formatters': {  # message 출력 포맷 형식
+    'disable_existing_loggers': False,
+    'formatters': {
         'verbose': {
-            'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
-            'datefmt': "%d/%b/%Y %H:%M:%S"
-        },
-        'simple': {
-            'format': '%(levelname)s %(message)s'
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
         },
     },
     'handlers': {
         'file': {
-            'level': 'DEBUG',
+            'level': 'WARNING',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs') + "/log",  # message가 저장될 파일명(파일명 변경 가능)
-            'formatter': 'verbose'
+            'filename': './logs/django.log',
+            'formatter': 'verbose',  # Formatter 사용
         },
-        'member_file': {
-            'level': 'INFO',
-            'class': "logging.FileHandler",
-            'filename': os.path.join(BASE_DIR, 'logs') + "/member_log"
-        },
-        'calendar_file': {
+        'member_handler': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs') + "/calendar_log"
-
+            'filename': './logs/backend.log'
         },
-        'diary_file': {
+        'calendar_handler': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs') + "/diary_log"
-
+            'filename': './logs/backend.log'
         },
-        'static_file':{
+        'diary_handler':{
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs') + "/static_log"
-
-        },
-
+            'filename': './logs/backend.log'
+        }
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],  # 'file' : handler의 이름
+            'handlers': ['file'],
+            'level': 'WARNING',
             'propagate': True,
-            'level': 'DEBUG',  # DEBUG 및 그 이상의 메시지를 file 핸들러에게 보내줍니다.
         },
-        'member': {  # Project에서 생성한 app의 이름
-            'handlers': ['member_file'],  # 다른 app을 생성 후 해당 app에서도
-            'propagate': True,
-            'level': 'INFO',  # 사용하고자 할 경우 해당 app 이름으로
+        'member': {
+            'handlers': ['member_handler'],
+            'level': 'INFO',
+            'propagate': True
         },
-        'harucalendar': {  # Project에서 생성한 app의 이름
-            'handlers': ['calendar_file'],  # 다른 app을 생성 후 해당 app에서도
-            'propagate': True,
-            'level': 'INFO',  # 사용하고자 할 경우 해당 app 이름으로
+        'harucalendar': {
+            'handlers': ['calendar_handler'],
+            'level': 'INFO',
+            'propagate': True
         },
-        'diary': {  # Project에서 생성한 app의 이름
-            'handlers': ['diary_file'],  # 다른 app을 생성 후 해당 app에서도
-            'propagate': True,
-            'level': 'INFO',  # 사용하고자 할 경우 해당 app 이름으로
-        },
-        'static': {  # Project에서 생성한 app의 이름
-            'handlers': ['static_file'],  # 다른 app을 생성 후 해당 app에서도
-            'propagate': True,
-            'level': 'INFO',  # 사용하고자 할 경우 해당 app 이름으로
-        },
-        # 좌측 코드를 추가 작성해서 사용
+        'diary':{
+            'handlers': ['diary_handler'],
+            'level':'INFO',
+            'propagate': True
+        }
     }
 }
-

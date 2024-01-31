@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import GuestCreateSerializer
 
+
 # 게스트 생성 뷰
 class GuestCreateView(APIView):
     @swagger_auto_schema(
@@ -17,7 +18,6 @@ class GuestCreateView(APIView):
         },
         operation_description="새로운 게스트 생성",
     )
-
     def post(self, request, *args, **kwargs):
 
         guest_pw = request.data.get('guest_pw')

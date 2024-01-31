@@ -21,20 +21,18 @@ class SignUpView(APIView):
         serializer = MemberSerializer(data=request.data)
         if serializer.is_valid():
             response_data = serializer.save()
-
-
             if response_data == {
                 "code": "M001",
                 "status": 201,
                 "message": "회원가입 완료"
             }:
-                logger.info(f'{client_ip}-[{current_time}] "POST", "/members" 201 회원가입 성공 ')
+                logger.info(f'INFO {client_ip} {current_time} POST /members 201 signup success')
                 return Response(response_data, status=201)
             else:
-                logger.error(f'{client_ip}-[{current_time}] "POST", "/members" 201 회원가입 실패')
+                logger.warning(f'WARNING {client_ip} {current_time} POST /members 400 already existing')
                 return Response(response_data, status=400)
+        logger.warning(f'WARNING {client_ip} {current_time} POST /members 400 signup failed')
         return Response(serializer.errors, status=400)
-
 
 
 class LogInView(APIView):
@@ -45,7 +43,6 @@ class LogInView(APIView):
     def post(self, request):
         client_ip = request.META.get('REMOTE_ADDR', None)
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
         serializer = SignSerializer(data=request.data)
         if serializer.is_valid():
             # serializer에서 유효성 검사를 통과한 경우
@@ -53,14 +50,9 @@ class LogInView(APIView):
             member_id = serializer.validated_data['member_id']
             nickname = serializer.validated_data['nickname']
 
-            logger.info(f'{client_ip}-[{current_time}] "POST", "/members" 200  member: {member_id}, nickname: {nickname}, 로그인 성공 ')
-
             # 로그인 성공
             request.session['member_id'] = member_id
             request.session['nickname'] = nickname
-
-
-
 
             response_data = {
                 "code": "A001",
@@ -69,10 +61,10 @@ class LogInView(APIView):
                 "nickname": nickname
             }
             response_status = status.HTTP_200_OK
+            logger.info(f'INFO {client_ip} {current_time} POST /members 200 login success ')
         else:
             # serializer에서 유효성 검사를 통과하지 못한 경우
             error_message = None
-
             non_field_errors = serializer.errors.get('non_field_errors', None)
             if non_field_errors:
                 error_message = non_field_errors[0]
@@ -84,8 +76,7 @@ class LogInView(APIView):
                 "data": error_message
             }
             response_status = status.HTTP_400_BAD_REQUEST
-            logger.error(f'{client_ip}-[{current_time}] "POST", "/members",401, "/mebers/login"  로그인 실패: {error_message} ')
-
+            logger.warning(f'WARNING {client_ip} {current_time} POST /members 200 login failed ')
         response = Response(response_data, status=response_status)
         return response
 
@@ -97,10 +88,8 @@ class LogOutView(APIView):
     def post(self, request):
         client_ip = request.META.get('REMOTE_ADDR', None)
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        member_id = request.session.get('member_id')
-        nickname=request.session.get('nickname')
-        logger.info(f'{client_ip}-[{current_time}] "POST", "/members" 200  member: {member_id}, nickname: {nickname}, 로그아웃 성공 ')
         request.session.flush()
+        logger.info(f'INFO {client_ip} {current_time} POST /members 200 logout success ')
         return Response(
             {
                 "code": "A002",
