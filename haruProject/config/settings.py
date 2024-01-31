@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'storages',
     'static',
     'whitenoise',
+    'django_prometheus',
 
 ]
 

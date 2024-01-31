@@ -41,7 +41,7 @@ class DiaryGetResponseSerializer(serializers.Serializer):
 
 
 class DiaryGetRequestSerializer(serializers.Serializer):
-    day = serializers.CharField(required=True)
+    diary_id = serializers.CharField(required=True)
 
 
 class DiaryLinkRequestSerializer(serializers.Serializer):
