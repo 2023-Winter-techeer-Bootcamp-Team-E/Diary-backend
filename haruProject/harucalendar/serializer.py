@@ -26,7 +26,7 @@ class HarucalendarCreateSerializer(serializers.ModelSerializer):
 class HarucalendarStickerCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Harucalendarsticker
-        fields = ['sticker_image_url', 'top', 'left', 'width', 'height', 'rotate']  # 'rolate'가 맞습니다.
+        fields = ['sticker_image_url', 'top', 'left', 'width', 'height', 'rotate']
 
     def create(self, validated_data):
         return Harucalendarsticker.objects.create(**validated_data)
