@@ -86,12 +86,9 @@ MIDDLEWARE = [
 
 # CORS 설정 - whitelist 에 추가된 주소 접근 허용
 CORS_ORIGIN_WHITELIST = [
-    "https://127.0.0.1:3000",  # for dev remove
     "http://127.0.0.1:8000",
     # for dev remove
-    "http://frontend:3000",
     "http://backend:8000",
-    "http://localhost:*",
     "https://www.haruconnection.store"
 ]
 
@@ -147,16 +144,16 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'haru',
-#         'USER': 'root',
-#         'PASSWORD': '12345678',
-#         'HOST': 'db',
-#         'PORT': '3306',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'haru',
+        'USER': 'root',
+        'PASSWORD': '12345678',
+        'HOST': 'db',
+        'PORT': '3306',
+    }
+}
 
 # RDS 설정
 # DATABASES = {
@@ -172,12 +169,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 #
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -265,53 +262,27 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
+            'format': '{levelname} {asctime} {module} {message} ',
             'style': '{',
         },
     },
+    'root': {
+        'handlers': ['file'],
+        'level': 'ERROR',
+    },
     'handlers': {
         'file': {
-            'level': 'WARNING',
+            'level': 'ERROR',
             'class': 'logging.FileHandler',
             'filename': './logs/django.log',
             'formatter': 'verbose',  # Formatter 사용
         },
-        'member_handler': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': './logs/backend.log'
-        },
-        'calendar_handler': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': './logs/backend.log'
-        },
-        'diary_handler':{
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': './logs/backend.log'
-        }
     },
     'loggers': {
         'django': {
             'handlers': ['file'],
-            'level': 'WARNING',
+            'level': 'ERROR',
             'propagate': True,
         },
-        'member': {
-            'handlers': ['member_handler'],
-            'level': 'INFO',
-            'propagate': True
-        },
-        'harucalendar': {
-            'handlers': ['calendar_handler'],
-            'level': 'INFO',
-            'propagate': True
-        },
-        'diary':{
-            'handlers': ['diary_handler'],
-            'level':'INFO',
-            'propagate': True
-        }
-    }
+    },
 }

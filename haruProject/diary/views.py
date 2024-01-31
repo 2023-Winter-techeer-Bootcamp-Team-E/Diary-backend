@@ -1,4 +1,3 @@
-from calendar import Calendar
 import logging
 from django.core.exceptions import ObjectDoesNotExist
 from drf_yasg import openapi
@@ -7,7 +6,6 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from member.models import Member
 from .models import Diary
 from harucalendar.models import Harucalendar
 from member.models import Member
@@ -27,7 +25,6 @@ from .swaggerserializer import DiaryGetResponseSerializer, DiaryLinkGetResponseS
     DiaryGetRequestSerializer, DiaryLinkRequestSerializer
 
 from datetime import datetime
-
 
 
 # Create your views here.

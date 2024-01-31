@@ -1,6 +1,6 @@
 from django.urls import path # , re_path
 
-from .views import DiaryManager, DiaryStickerManager, DiariesGet,DiariesPost, DiariesSave
+from .views import DiaryManager, DiaryStickerManager, DiariesGet, DiariesPost, DiariesSave
 
 #
 # websocket_urlpatterns = [
