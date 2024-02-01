@@ -14,7 +14,7 @@ def generate_sticker_image(keyword):
     client = OpenAI(api_key=DALLE_API_KEY)
     response = client.images.generate(
         model="dall-e-3",
-        prompt=f"please do not provide multiple stickers. Create a {keyword} sticker that is unique,cute and has an illustrative feel. The sticker should not include any text or characters, and the design should avoid incorporating regional or personal names. Ensure that everything except the sticker is transparent.",
+        prompt=f"Single {keyword} object that is cute, and illustrative feel. This object must not contain any content, text or multi characters. Save this within a circular thin frame.",
         size="1024x1024",
         quality="standard",
         n=1,
