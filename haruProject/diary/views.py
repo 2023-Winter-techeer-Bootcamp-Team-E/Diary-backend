@@ -11,7 +11,7 @@ from harucalendar.models import Harucalendar
 from member.models import Member
 from .serializers import (DiaryDetailSerializer, DiarySnsLinkSerializer,
                           DiaryCreateSerializer,
-                          DiaryUpdateSerializer, DiaryStickerModifySerializer, DiaryTextBoxModifySerializer,
+                          DiaryUpdateSerializer,
                           DiaryTextBoxUpdateSerializer, DiaryStickerUpdateSerializer)
 from harucalendar.serializer import HarucalendarCreateSerializer
 from .utils import extract_top_keywords, generate_sticker_images
@@ -48,15 +48,17 @@ class DiariesGet(APIView):
             # calendar_id = request.session.get('calendar_id')
             # found_diary = Diary.objects.get(day=day, calendar_id=calendar_id)
             # request.session['diary_id'] = found_diary.diary_id
+
             diary_instance = Diary.objects.get(pk=diary_id)
             request.session['diary_id'] = diary_id
-
-            member_id = request.session.get('member_id')
+            calendar_id = diary_instance.calendar_id
+            calendar_instance = Harucalendar.objects.get(pk=calendar_id)
+            member_id = calendar_instance.member_id
             member_instance = Member.objects.get(pk=member_id)
             nickname = member_instance.nickname
             login_id = member_instance.login_id
             serialized_diary = DiaryDetailSerializer(diary_instance).data
-            # 출력값에 nickname, day 출력, 임시코드이고 추후 깔끔하게 리펙터링 하겠음-우성- /믿고 있겠음-우동-
+            # 출력값에 nickname, day 출력, 임시코드이고 추후 깔끔하게 리펙터링 하겠음-우성-
             logger.info(f'INFO {client_ip} {current_time} GET api/v1/diaries//DiriesGet 200 diary is required')
             return Response(status=status.HTTP_200_OK,
                             data={"diary_data": serialized_diary, "day": diary_instance.day, "nickname": nickname,
@@ -202,15 +204,16 @@ class DiariesSave(APIView):
                 print(sticker_data)
                 sticker_instance = DiarySticker.objects.get(pk=sticker_data['sticker_id'])
                 print(sticker_instance)
-                print(sticker_data['top'], sticker_data['left'], sticker_data['width'], sticker_data['height'], sticker_data['rotate'])
+                print(sticker_data['top'], sticker_data['left'], sticker_data['width'], sticker_data['height'],
+                      sticker_data['rotate'])
                 sticker_serializer = DiaryStickerUpdateSerializer(instance=sticker_instance, data={
-                                                'sticker_image_url': sticker_data['sticker_image_url'],
-                                                'top': sticker_data['top'],
-                                                'left': sticker_data['left'],
-                                                'width': sticker_data['width'],
-                                                'height': sticker_data['height'],
-                                                'rotate': sticker_data['rotate']
-                                            })
+                    'sticker_image_url': sticker_data['sticker_image_url'],
+                    'top': sticker_data['top'],
+                    'left': sticker_data['left'],
+                    'width': sticker_data['width'],
+                    'height': sticker_data['height'],
+                    'rotate': sticker_data['rotate']
+                })
                 if sticker_serializer.is_valid():
                     sticker_serializer.save()
                 else:
@@ -227,12 +230,12 @@ class DiariesSave(APIView):
                 textbox_instance = DiaryTextBox.objects.get(pk=textbox_data['textbox_id'])
                 print(textbox_instance)
                 textbox_serializer = DiaryTextBoxUpdateSerializer(instance=textbox_instance, data={
-                                                'content': textbox_data['content'],
-                                                'writer': textbox_data['writer'],
-                                                'xcoor': textbox_data['xcoor'],
-                                                'ycoor': textbox_data['ycoor'],
-                                                'width': textbox_data['width'],
-                                                'height': textbox_data['height']
+                    'content': textbox_data['content'],
+                    'writer': textbox_data['writer'],
+                    'xcoor': textbox_data['xcoor'],
+                    'ycoor': textbox_data['ycoor'],
+                    'width': textbox_data['width'],
+                    'height': textbox_data['height']
                 })
                 if textbox_serializer.is_valid():
                     textbox_serializer.save()
