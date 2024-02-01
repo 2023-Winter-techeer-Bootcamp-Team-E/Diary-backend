@@ -18,7 +18,7 @@ class DiaryStickerSerializer(serializers.ModelSerializer):
 class DiaryStickerModifySerializer(serializers.ModelSerializer):
     class Meta:
         model = DiarySticker
-        fields = ['sticker_image_url', 'top', 'left', 'height', 'rotate']
+        fields = ['sticker_image_url', 'top', 'left', 'width', 'height', 'rotate']
 
     def create(self, validated_data):
         return DiarySticker.objects.create(**validated_data)
@@ -95,13 +95,37 @@ class DiaryTextBoxCreateSerializer(serializers.ModelSerializer):
         return DiaryTextBox.objects.create(**validated_data)
 
 
-class DiaryStickerCreateSerializer(serializers.ModelSerializer):
+class DiaryStickerUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = DiarySticker
-        fields = ['sticker_image_url', 'top', 'left', 'width', 'height']
+        fields = ['top', 'left', 'width', 'height', 'rotate']
 
-    def create(self, validated_data):
-        return DiarySticker.objects.create(**validated_data)
+    def update(self, instance, validated_data):
+        print(validated_data)
+        instance.top = validated_data.get('top', instance.top)
+        instance.left = validated_data.get('left', instance.left)
+        instance.width = validated_data.get('width', instance.width)
+        instance.height = validated_data.get('height', instance.height)
+        instance.rotate = validated_data.get('rotate', instance.rotate)
+        instance.save()
+        print(instance.top, instance.left, instance.width, instance.height, instance.rotate)
+        return instance
+
+
+class DiaryTextBoxUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DiaryTextBox
+        fields = ['writer', 'content', 'xcoor', 'ycoor', 'width', 'height']
+
+    def update(self, instance, validated_data):
+        instance.writer = validated_data.get('writer', instance.writer)
+        instance.content = validated_data.get('content', instance.content)
+        instance.xcoor = validated_data.get('xcoor', instance.xcoor)
+        instance.ycoor = validated_data.get('ycoor', instance.ycoor)
+        instance.width = validated_data.get('width', instance.width)
+        instance.height = validated_data.get('height', instance.height)
+        instance.save()
+        return instance
 
 
 class DiaryUpdateSerializer(serializers.ModelSerializer):

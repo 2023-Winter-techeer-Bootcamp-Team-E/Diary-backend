@@ -35,6 +35,7 @@ class DiaryGetResponseSerializer(serializers.Serializer):
     diary_id = serializers.IntegerField()
     day = serializers.IntegerField()
     diary_bg_id = serializers.CharField()
+    login_id = serializers.CharField()
     is_expiry = serializers.BooleanField()
     diaryTextBoxs = DiaryTextBoxGetSerializer(many=True)
     diaryStickers = DiaryStickerGetSerializer(many=True)
@@ -72,6 +73,7 @@ class DiaryTextBoxPostResponseSerializer(serializers.Serializer):
 
 
 class TextBoxPutRequestSerializer(serializers.Serializer):
+    textbox_id = serializers.IntegerField()
     writer = serializers.CharField()
     content = serializers.CharField()
     xcoor = serializers.IntegerField()
@@ -81,6 +83,7 @@ class TextBoxPutRequestSerializer(serializers.Serializer):
 
 
 class StickerPutRequestSerializer(serializers.Serializer):
+    sticker_id = serializers.IntegerField()
     sticker_image_url = serializers.URLField()
     top = serializers.IntegerField()
     left = serializers.IntegerField()
@@ -89,9 +92,13 @@ class StickerPutRequestSerializer(serializers.Serializer):
     rotate = serializers.IntegerField()
 
 
-class DiaryTextBoxPutRequestSerializer(serializers.Serializer):
+class DiaryTextBoxAndStickerPutRequestSerializer(serializers.Serializer):
     textboxs = TextBoxPutRequestSerializer(many=True)
     stickers = StickerPutRequestSerializer(many=True)
+
+
+class DiarySaveRequestSerializer(serializers.Serializer):
+    saved_data = DiaryTextBoxAndStickerPutRequestSerializer()
 
 
 class DiaryTextBoxPutResponseSerializer(serializers.Serializer):
