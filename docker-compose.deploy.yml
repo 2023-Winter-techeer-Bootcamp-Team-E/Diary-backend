@@ -1,0 +1,19 @@
+version: "3.8"
+
+volumes:
+  build_folder: null
+
+services:
+
+  nginx:
+    image: movvoo/haru:nginx
+    build:
+      context: ./nginx
+
+  backend:
+    image: movvoo/haru:backend
+    build: ./haruProject
+
+  frontend:
+    image: movvoo/haru:frontend
+    build: ../frontend
