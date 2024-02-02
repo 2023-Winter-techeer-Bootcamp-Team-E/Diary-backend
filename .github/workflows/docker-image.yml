@@ -1,0 +1,27 @@
+name: Haru Docker Hub
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+    
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    # 도커 허브 사용을 위해 도커에 로그인
+    - name: Login to DockerHub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }} # 도커 홈페이지에서 발급받은 토큰 사용
+
+    - name: Build and Push to DockerHub
+      run: |
+        docker compose -f docker-compose.deploy.yml build
+        docker compose -f docker-compose.deploy.yml push
