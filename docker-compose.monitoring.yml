@@ -26,10 +26,16 @@ services:
     container_name: grafana
     image: grafana/grafana
     environment:
-      GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource"
       GF_AUTH_ANONYMOUS_ENABLED: 'true'
       GF_AUTH_ANONYMOUS_ORG_ROLE: 'Admin'
       GF_AUTH_DISABLE_LOGIN_FORM: 'true'
+      GF_DATABASE_TYPE: "mysql"
+      GF_DATABASE_HOST: ${DATABASE_HOST}
+      GF_DATABASE_NAME: ${DATABASE_NAME}
+      GF_DATABASE_USER: ${DATABASE_USERNAME}
+      GF_DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+    env_file:
+      - ./haruProject/.env
     restart: 'always'
     volumes:
       - ./monitoring/grafana:/var/lib/grafana
