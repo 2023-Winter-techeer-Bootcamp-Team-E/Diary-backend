@@ -59,7 +59,6 @@ INSTALLED_APPS = [
     'diary',
     'rest_framework',
     'member',
-    'guest',
     'harucalendar',
     'drf_yasg',
     'storages',
